@@ -10,12 +10,12 @@
 ```
 documentation/
 ├── technical/                    # 技术文档
-│   ├── architecture/            # 系统架构文档
-│   │   └── developer-engineer/  # Sprint 0架构设计成果
-│   └── 长沙市财政评审中心政府投资信息化项目评审指南.pdf
+│   └── architecture/            # 系统架构文档
+│       └── developer-engineer/  # Sprint 0架构设计成果
 ├── user/                        # 用户文档
-│   ├── technical/               # 技术用户文档
-│   └── user/                    # 最终用户文档
+│   ├── requirements/            # 用户需求和业务规范
+│   │   └── 长沙市财政评审中心政府投资信息化项目评审指南.pdf
+│   └── manuals/                 # 用户操作手册 (后续添加)
 └── sprints/                     # Sprint开发记录
     └── sprint-0/                # Sprint 0规划和设计文档
         ├── user-stories/        # 用户故事和UI/UX设计
@@ -29,12 +29,12 @@ documentation/
 
 #### 技术文档 (technical/)
 - **架构设计文档** - 系统整体架构、技术选型、实施计划
-- **需求规范文档** - 原始PDF指南和需求分析文档
 - **API文档** - (后续Sprint添加)
 - **部署文档** - (后续Sprint添加)
 
 #### 用户文档 (user/)
-- **用户手册** - 系统操作指南 (后续Sprint添加)
+- **需求规范文档** - 用户提供的业务需求和评审指南
+- **用户操作手册** - 系统使用指南 (后续Sprint添加)
 - **管理员文档** - 系统管理和维护 (后续Sprint添加)
 
 #### Sprint记录 (sprints/)
@@ -72,7 +72,7 @@ documentation/
 - [Git工作流规范](sprints/sprint-0/git-workflow-specification.md)
 
 #### 需求和规范
-- [政府评审指南 (PDF)](technical/长沙市财政评审中心政府投资信息化项目评审指南.pdf)
+- [政府评审指南 (PDF)](user/requirements/长沙市财政评审中心政府投资信息化项目评审指南.pdf)
 
 ---
 
