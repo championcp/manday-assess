@@ -12,18 +12,38 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
-      // route level code-splitting
-      // this generates a separate chunk (Home.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import('../views/HomeView.vue'),
     },
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
+    },
+    // 项目管理路由
+    {
+      path: '/projects',
+      name: 'project-list',
+      component: () => import('../views/ProjectListView.vue'),
+    },
+    {
+      path: '/projects/create',
+      name: 'project-create',
+      component: () => import('../views/ProjectFormView.vue'),
+    },
+    {
+      path: '/projects/:id',
+      name: 'project-detail',
+      component: () => import('../views/ProjectDetailView.vue'),
+    },
+    {
+      path: '/projects/:id/edit',
+      name: 'project-edit',
+      component: () => import('../views/ProjectFormView.vue'),
+    },
+    {
+      path: '/projects/:id/calculate',
+      name: 'project-calculate',
+      component: () => import('../views/NesmaCalculateView.vue'),
     },
   ],
 })
