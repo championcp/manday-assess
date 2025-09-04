@@ -1,0 +1,471 @@
+package gov.changsha.finance.service;
+
+import gov.changsha.finance.entity.*;
+import gov.changsha.finance.repository.ProjectRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * NESMA功能点计算服务单元测试
+ * 
+ * 测试覆盖范围：
+ * 1. 基本计算功能测试
+ * 2. 复杂度判定算法测试
+ * 3. 权重配置测试
+ * 4. VAF调整因子测试
+ * 5. 异常情况处理测试
+ * 6. 边界条件测试
+ * 7. 性能测试
+ * 
+ * @author Developer Engineer
+ * @version 1.0.0
+ * @since 2025-09-03
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("NESMA功能点计算服务测试")
+class NesmaCalculationServiceTest {
+
+    @Mock
+    private ProjectRepository projectRepository;
+
+    @InjectMocks
+    private NesmaCalculationService nesmaCalculationService;
+
+    private Project testProject;
+    private List&lt;FunctionPoint&gt; testFunctionPoints;
+    private NesmaConfiguration testNesmaConfig;
+
+    private static final int DECIMAL_SCALE = 4;
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+
+    @BeforeEach
+    void setUp() {
+        // 初始化测试项目
+        testProject = new Project();
+        testProject.setId(1L);
+        testProject.setProjectName("测试项目");
+        
+        // 初始化NESMA配置
+        testNesmaConfig = new NesmaConfiguration(1L);
+        testNesmaConfig.setUseVaf(true);
+        testNesmaConfig.calculateVaf(); // 使用默认VAF因子
+        testProject.setNesmaConfiguration(testNesmaConfig);
+        
+        // 初始化测试功能点
+        testFunctionPoints = new ArrayList&lt;&gt;();
+        testProject.setFunctionPoints(testFunctionPoints);
+    }
+
+    @Test
+    @DisplayName("基本NESMA功能点计算 - 成功场景")
+    void testCalculateNesmaFunctionPoints_Success() {
+        // 准备测试数据 - 包含5种类型功能点
+        addTestFunctionPoint("ILF", "FP001", "用户信息表", 15, 2, 0, "CONFIRMED");
+        addTestFunctionPoint("EIF", "FP002", "外部字典接口", 10, 1, 0, "CONFIRMED");
+        addTestFunctionPoint("EI", "FP003", "用户登录", 3, 0, 1, "CONFIRMED");
+        addTestFunctionPoint("EO", "FP004", "用户报表", 8, 0, 2, "CONFIRMED");
+        addTestFunctionPoint("EQ", "FP005", "用户查询", 5, 0, 1, "CONFIRMED");
+        
+        // Mock repository行为
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        // 执行计算
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证结果
+        assertNotNull(result);
+        assertEquals(1L, result.getProjectId());
+        assertEquals("NESMA_CALCULATION", result.getCalculationType());
+        assertEquals("COMPLETED", result.getCalculationStatus());
+        
+        // 验证功能点总数计算
+        // ILF(15 DET, 2 RET) → MEDIUM → 10.0000
+        // EIF(10 DET, 1 RET) → LOW → 5.0000
+        // EI(3 DET, 1 FTR) → LOW → 3.0000
+        // EO(8 DET, 2 FTR) → MEDIUM → 5.0000
+        // EQ(5 DET, 1 FTR) → MEDIUM → 4.0000
+        BigDecimal expectedTotal = new BigDecimal("27.0000");
+        assertEquals(0, expectedTotal.compareTo(result.getTotalFunctionPoints()));
+        
+        // 验证VAF调整后功能点数（默认VAF=1.00）
+        BigDecimal expectedAdjusted = expectedTotal.multiply(testNesmaConfig.getFinalAdjustmentFactor());
+        assertEquals(0, expectedAdjusted.setScale(DECIMAL_SCALE, ROUNDING_MODE)
+                                      .compareTo(result.getAdjustedFunctionPoints()));
+        
+        // 验证人月数和成本计算
+        assertTrue(result.getEstimatedPersonMonths().compareTo(BigDecimal.ZERO) &gt; 0);
+        assertTrue(result.getEstimatedCost().compareTo(BigDecimal.ZERO) &gt; 0);
+        
+        // 验证性能要求（&lt;500ms）
+        assertNotNull(result.getCalculationDurationMs());
+        assertTrue(result.getCalculationDurationMs() &lt; 500L);
+    }
+
+    @Test
+    @DisplayName("ILF复杂度判定测试 - 所有复杂度等级")
+    void testIlfComplexityDetermination() {
+        // 测试LOW复杂度: DET≤19, RET≤1
+        addTestFunctionPoint("ILF", "ILF_LOW", "低复杂度ILF", 15, 1, 0, "CONFIRMED");
+        
+        // 测试MEDIUM复杂度: DET≤19, RET=2-5 或 DET=20-50, RET≤1
+        addTestFunctionPoint("ILF", "ILF_MED1", "中复杂度ILF1", 15, 3, 0, "CONFIRMED");
+        addTestFunctionPoint("ILF", "ILF_MED2", "中复杂度ILF2", 30, 1, 0, "CONFIRMED");
+        
+        // 测试HIGH复杂度: DET≥51 或 (DET=20-50, RET≥2) 或 (DET≤19, RET≥6)
+        addTestFunctionPoint("ILF", "ILF_HIGH1", "高复杂度ILF1", 60, 1, 0, "CONFIRMED");
+        addTestFunctionPoint("ILF", "ILF_HIGH2", "高复杂度ILF2", 30, 3, 0, "CONFIRMED");
+        addTestFunctionPoint("ILF", "ILF_HIGH3", "高复杂度ILF3", 15, 6, 0, "CONFIRMED");
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证计算结果
+        // LOW: 7, MEDIUM: 10*3=30, HIGH: 15*3=45
+        // 总计: 7 + 30 + 45 = 82
+        BigDecimal expected = new BigDecimal("82.0000");
+        assertEquals(0, expected.compareTo(result.getTotalFunctionPoints()));
+    }
+
+    @Test
+    @DisplayName("EI复杂度判定测试 - 所有复杂度等级")
+    void testEiComplexityDetermination() {
+        // 测试LOW复杂度: DET≤4, FTR≤1
+        addTestFunctionPoint("EI", "EI_LOW", "低复杂度EI", 3, 0, 1, "CONFIRMED");
+        
+        // 测试MEDIUM复杂度: (DET≤4, FTR=2) 或 (DET=5-15, FTR≤1)
+        addTestFunctionPoint("EI", "EI_MED1", "中复杂度EI1", 3, 0, 2, "CONFIRMED");
+        addTestFunctionPoint("EI", "EI_MED2", "中复杂度EI2", 8, 0, 1, "CONFIRMED");
+        
+        // 测试HIGH复杂度: FTR≥3 或 (DET≥16) 或 (DET=5-15, FTR≥2)
+        addTestFunctionPoint("EI", "EI_HIGH1", "高复杂度EI1", 3, 0, 3, "CONFIRMED");
+        addTestFunctionPoint("EI", "EI_HIGH2", "高复杂度EI2", 20, 0, 1, "CONFIRMED");
+        addTestFunctionPoint("EI", "EI_HIGH3", "高复杂度EI3", 10, 0, 2, "CONFIRMED");
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证计算结果
+        // LOW: 3, MEDIUM: 4*2=8, HIGH: 6*3=18
+        // 总计: 3 + 8 + 18 = 29
+        BigDecimal expected = new BigDecimal("29.0000");
+        assertEquals(0, expected.compareTo(result.getTotalFunctionPoints()));
+    }
+
+    @Test
+    @DisplayName("EO复杂度判定测试 - 边界条件")
+    void testEoComplexityDetermination() {
+        // 测试边界条件
+        addTestFunctionPoint("EO", "EO_BOUNDARY1", "边界EO1", 5, 0, 1, "CONFIRMED"); // LOW
+        addTestFunctionPoint("EO", "EO_BOUNDARY2", "边界EO2", 6, 0, 1, "CONFIRMED"); // MEDIUM
+        addTestFunctionPoint("EO", "EO_BOUNDARY3", "边界EO3", 5, 0, 2, "CONFIRMED"); // MEDIUM
+        addTestFunctionPoint("EO", "EO_BOUNDARY4", "边界EO4", 19, 0, 2, "CONFIRMED"); // HIGH
+        addTestFunctionPoint("EO", "EO_BOUNDARY5", "边界EO5", 20, 0, 1, "CONFIRMED"); // HIGH
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证计算结果
+        // LOW: 4*1=4, MEDIUM: 5*2=10, HIGH: 7*2=14
+        // 总计: 4 + 10 + 14 = 28
+        BigDecimal expected = new BigDecimal("28.0000");
+        assertEquals(0, expected.compareTo(result.getTotalFunctionPoints()));
+    }
+
+    @Test
+    @DisplayName("VAF调整因子测试")
+    void testVafAdjustment() {
+        // 添加测试功能点
+        addTestFunctionPoint("ILF", "FP001", "测试ILF", 15, 2, 0, "CONFIRMED");
+        
+        // 配置自定义VAF值
+        testNesmaConfig.setDataCommunication(5);
+        testNesmaConfig.setPerformance(4);
+        testNesmaConfig.setComplexProcessing(3);
+        testNesmaConfig.setCustomAdjustmentFactor(new BigDecimal("1.1000"));
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证VAF计算
+        BigDecimal expectedVaf = testNesmaConfig.calculateVaf();
+        BigDecimal expectedFinalFactor = testNesmaConfig.getFinalAdjustmentFactor();
+        
+        // 原始功能点: 10.0000 (MEDIUM ILF)
+        // 调整后功能点 = 10.0000 * VAF * CustomFactor
+        BigDecimal originalFp = new BigDecimal("10.0000");
+        BigDecimal expectedAdjusted = originalFp.multiply(expectedFinalFactor)
+                                                .setScale(DECIMAL_SCALE, ROUNDING_MODE);
+        
+        assertEquals(0, expectedAdjusted.compareTo(result.getAdjustedFunctionPoints()));
+    }
+
+    @Test
+    @DisplayName("VAF禁用测试")
+    void testVafDisabled() {
+        // 添加测试功能点
+        addTestFunctionPoint("EQ", "FP001", "测试EQ", 8, 0, 2, "CONFIRMED");
+        
+        // 禁用VAF
+        testNesmaConfig.setUseVaf(false);
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证未应用VAF调整
+        assertEquals(0, result.getTotalFunctionPoints().compareTo(result.getAdjustedFunctionPoints()));
+    }
+
+    @Test
+    @DisplayName("项目不存在异常测试")
+    void testProjectNotFound() {
+        when(projectRepository.findById(999L)).thenReturn(Optional.empty());
+        
+        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {
+            nesmaCalculationService.calculateNesmaFunctionPoints(999L);
+        });
+        
+        assertTrue(exception.getMessage().contains("NESMA计算执行失败"));
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertTrue(exception.getCause().getMessage().contains("项目不存在"));
+    }
+
+    @Test
+    @DisplayName("项目ID为空异常测试")
+    void testNullProjectId() {
+        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {
+            nesmaCalculationService.calculateNesmaFunctionPoints(null);
+        });
+        
+        assertTrue(exception.getMessage().contains("NESMA计算执行失败"));
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertTrue(exception.getCause().getMessage().contains("项目ID不能为空"));
+    }
+
+    @Test
+    @DisplayName("功能点列表为空异常测试")
+    void testEmptyFunctionPointList() {
+        // 设置空的功能点列表
+        testProject.setFunctionPoints(new ArrayList&lt;&gt;());
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {
+            nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        });
+        
+        assertTrue(exception.getMessage().contains("NESMA计算执行失败"));
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertTrue(exception.getCause().getMessage().contains("项目功能点数据为空"));
+    }
+
+    @Test
+    @DisplayName("功能点类型无效异常测试")
+    void testInvalidFunctionPointType() {
+        addTestFunctionPoint("INVALID", "FP001", "无效类型", 10, 2, 0, "CONFIRMED");
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {
+            nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        });
+        
+        assertTrue(exception.getMessage().contains("NESMA计算执行失败"));
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertTrue(exception.getCause().getMessage().contains("不支持的功能点类型"));
+    }
+
+    @Test
+    @DisplayName("功能点类型为空异常测试")
+    void testNullFunctionPointType() {
+        addTestFunctionPoint(null, "FP001", "类型为空", 10, 2, 0, "CONFIRMED");
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        RuntimeException exception = assertThrows(RuntimeException.class, () -&gt; {
+            nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        });
+        
+        assertTrue(exception.getMessage().contains("NESMA计算执行失败"));
+        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertTrue(exception.getCause().getMessage().contains("功能点类型不能为空"));
+    }
+
+    @Test
+    @DisplayName("空值参数处理测试")
+    void testNullParameterHandling() {
+        // DET, RET, FTR为null的情况
+        FunctionPoint fp = new FunctionPoint("FP001", "空值测试", "ILF", 1L);
+        fp.setId(1L);
+        fp.setDetCount(null);  // 应该默认为1
+        fp.setRetCount(null);  // 应该默认为1
+        fp.setFtrCount(null);  // 应该默认为1
+        fp.setStatus("CONFIRMED");
+        testFunctionPoints.add(fp);
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证默认值处理: ILF(1 DET, 1 RET) → LOW → 7.0000
+        BigDecimal expected = new BigDecimal("7.0000");
+        assertEquals(0, expected.compareTo(result.getTotalFunctionPoints()));
+    }
+
+    @Test
+    @DisplayName("功能点状态警告测试")
+    void testFunctionPointStatusWarning() {
+        // 添加未确认状态的功能点，应该产生警告但不影响计算
+        addTestFunctionPoint("EI", "FP001", "草稿状态", 3, 0, 1, "DRAFT");
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证计算正常完成
+        assertNotNull(result);
+        assertEquals("COMPLETED", result.getCalculationStatus());
+        
+        // 验证功能点值计算正确
+        BigDecimal expected = new BigDecimal("3.0000");
+        assertEquals(0, expected.compareTo(result.getTotalFunctionPoints()));
+    }
+
+    @Test
+    @DisplayName("大数据量性能测试")
+    void testLargeDatasetPerformance() {
+        // 添加大量功能点测试性能
+        for (int i = 0; i &lt; 100; i++) {
+            String type = new String[]{"ILF", "EIF", "EI", "EO", "EQ"}[i % 5];
+            addTestFunctionPoint(type, "FP" + String.format("%03d", i), "批量功能点" + i, 
+                               10 + (i % 20), 2 + (i % 3), 1 + (i % 2), "CONFIRMED");
+        }
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        long startTime = System.currentTimeMillis();
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        long endTime = System.currentTimeMillis();
+        
+        // 验证性能要求：100个功能点的计算时间应该&lt;500ms
+        assertTrue(endTime - startTime &lt; 500L);
+        assertTrue(result.getCalculationDurationMs() &lt; 500L);
+        
+        // 验证计算完成
+        assertEquals("COMPLETED", result.getCalculationStatus());
+        assertTrue(result.getTotalFunctionPoints().compareTo(BigDecimal.ZERO) &gt; 0);
+    }
+
+    @Test
+    @DisplayName("人月数和成本计算测试")
+    void testPersonMonthsAndCostCalculation() {
+        // 添加已知功能点数的测试数据
+        addTestFunctionPoint("ILF", "FP001", "测试ILF", 25, 3, 0, "CONFIRMED"); // HIGH = 15
+        addTestFunctionPoint("EI", "FP002", "测试EI", 3, 0, 1, "CONFIRMED");    // LOW = 3
+        // 总计：18功能点
+        
+        // 禁用VAF简化计算
+        testNesmaConfig.setUseVaf(false);
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证功能点总数
+        BigDecimal expectedFp = new BigDecimal("18.0000");
+        assertEquals(0, expectedFp.compareTo(result.getTotalFunctionPoints()));
+        
+        // 验证人月数计算 (18 * 0.07 = 1.26)
+        BigDecimal expectedPersonMonths = new BigDecimal("1.2600");
+        assertEquals(0, expectedPersonMonths.compareTo(result.getEstimatedPersonMonths()));
+        
+        // 验证成本计算 (1.26 * 15000 = 18900)
+        BigDecimal expectedCost = new BigDecimal("18900.0000");
+        assertEquals(0, expectedCost.compareTo(result.getEstimatedCost()));
+    }
+
+    @Test
+    @DisplayName("精度计算测试")
+    void testPrecisionCalculation() {
+        // 添加会产生小数的功能点组合
+        addTestFunctionPoint("EI", "FP001", "测试精度1", 3, 0, 1, "CONFIRMED");   // 3
+        addTestFunctionPoint("EI", "FP002", "测试精度2", 4, 0, 1, "CONFIRMED");   // 3
+        addTestFunctionPoint("EQ", "FP003", "测试精度3", 8, 0, 1, "CONFIRMED");   // 4
+        // 总计: 10.0000
+        
+        // 设置特殊VAF产生小数
+        testNesmaConfig.setDataCommunication(1);
+        testNesmaConfig.setPerformance(2);
+        testNesmaConfig.setComplexProcessing(3);
+        // 其他保持默认值3，GSC总和 = 1+0+2+3+3+3+3+3+3+3+3+3+0+3 = 33
+        // VAF = 33*0.01 + 0.65 = 0.98
+        
+        when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
+        
+        CalculationResult result = nesmaCalculationService.calculateNesmaFunctionPoints(1L);
+        
+        // 验证所有结果都是4位小数精度
+        assertEquals(DECIMAL_SCALE, result.getTotalFunctionPoints().scale());
+        assertEquals(DECIMAL_SCALE, result.getAdjustedFunctionPoints().scale());
+        assertEquals(DECIMAL_SCALE, result.getEstimatedPersonMonths().scale());
+        assertEquals(DECIMAL_SCALE, result.getEstimatedCost().scale());
+        
+        // 验证VAF调整计算精度
+        BigDecimal originalFp = new BigDecimal("10.0000");
+        BigDecimal vafValue = testNesmaConfig.calculateVaf();
+        BigDecimal expectedAdjusted = originalFp.multiply(vafValue)
+                                                .setScale(DECIMAL_SCALE, ROUNDING_MODE);
+        assertEquals(0, expectedAdjusted.compareTo(result.getAdjustedFunctionPoints()));
+    }
+
+    @Test
+    @DisplayName("描述性方法测试")
+    void testDescriptiveMethods() {
+        // 测试功能点类型描述
+        assertEquals("内部逻辑文件", nesmaCalculationService.getFunctionPointTypeDescription("ILF"));
+        assertEquals("外部接口文件", nesmaCalculationService.getFunctionPointTypeDescription("EIF"));
+        assertEquals("外部输入", nesmaCalculationService.getFunctionPointTypeDescription("EI"));
+        assertEquals("外部输出", nesmaCalculationService.getFunctionPointTypeDescription("EO"));
+        assertEquals("外部查询", nesmaCalculationService.getFunctionPointTypeDescription("EQ"));
+        assertEquals("未知类型", nesmaCalculationService.getFunctionPointTypeDescription("UNKNOWN"));
+        
+        // 测试复杂度等级描述
+        assertEquals("低", nesmaCalculationService.getComplexityLevelDescription("LOW"));
+        assertEquals("中", nesmaCalculationService.getComplexityLevelDescription("MEDIUM"));
+        assertEquals("高", nesmaCalculationService.getComplexityLevelDescription("HIGH"));
+        assertEquals("未知", nesmaCalculationService.getComplexityLevelDescription("UNKNOWN"));
+    }
+
+    /**
+     * 辅助方法：添加测试功能点
+     */
+    private void addTestFunctionPoint(String type, String code, String name, 
+                                    Integer det, Integer ret, Integer ftr, String status) {
+        FunctionPoint fp = new FunctionPoint(code, name, type, 1L);
+        fp.setId((long) (testFunctionPoints.size() + 1));
+        fp.setDetCount(det);
+        fp.setRetCount(ret);
+        fp.setFtrCount(ftr);
+        fp.setStatus(status);
+        testFunctionPoints.add(fp);
+    }
+}

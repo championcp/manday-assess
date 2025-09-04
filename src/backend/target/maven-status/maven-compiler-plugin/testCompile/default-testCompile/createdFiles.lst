@@ -1,0 +1,9 @@
+gov/changsha/finance/integration/TestcontainersBasicTest.class
+gov/changsha/finance/config/TestContainerConfiguration.class
+gov/changsha/finance/integration/IntegrationTestSuite.class
+gov/changsha/finance/integration/SimpleDatabaseIntegrationTest.class
+gov/changsha/finance/service/VafCalculationServiceTest.class
+gov/changsha/finance/service/PdfCaseValidationAnalysisReport.class
+gov/changsha/finance/integration/SimpleDatabaseIntegrationTest$Initializer.class
+gov/changsha/finance/service/PdfCaseValidationTest.class
+gov/changsha/finance/service/NesmaCalculationServiceSimpleTest.class

@@ -1,0 +1,357 @@
+package gov.changsha.finance.integration;
+
+import gov.changsha.finance.config.TestContainerConfiguration;
+import gov.changsha.finance.entity.Project;
+import gov.changsha.finance.entity.VafFactor;
+import gov.changsha.finance.repository.ProjectRepository;
+import gov.changsha.finance.repository.VafFactorRepository;
+import gov.changsha.finance.service.NesmaCalculationService;
+import gov.changsha.finance.service.VafCalculationService;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * NESMA计算结果数据持久化集成测试
+ * 政府项目NESMA计算准确性和数据完整性综合验证
+ * 
+ * 测试目标：
+ * 1. NESMA计算结果的数据库持久化验证
+ * 2. VAF因子评分的数据完整性验证
+ * 3. 计算过程的数据追溯性验证
+ * 4. 政府项目评审指南案例的100%一致性验证
+ * 5. 数据精度和舍入规则的严格验证
+ * 
+ * 质量标准：
+ * - 计算结果与PDF指南案例100%一致
+ * - 支持政府项目审计追溯要求
+ * - 满足4位小数精度要求
+ * - 确保数据完整性和一致性
+ * 
+ * @author QA Test Engineer
+ * @version 1.0.0
+ * @since 2025-09-04
+ */
+@SpringBootTest
+@Import(TestContainerConfiguration.class)
+@ActiveProfiles("integration-test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Transactional
+public class NesmaCalculationPersistenceIntegrationTest {
+
+    @Autowired
+    private ProjectRepository projectRepository;
+    
+    @Autowired
+    private VafFactorRepository vafFactorRepository;
+    
+    @Autowired
+    private NesmaCalculationService nesmaCalculationService;
+    
+    @Autowired
+    private VafCalculationService vafCalculationService;
+    
+    @Autowired
+    private EntityManager entityManager;
+    
+    private Project testProject;
+    
+    @BeforeEach
+    void setUp() {
+        // 创建政府项目测试数据，模拟真实的长沙财政评审场景
+        testProject = new Project();
+        testProject.setProjectCode("GOV-NESMA-2025-001");
+        testProject.setProjectName("长沙市政府投资信息化项目NESMA评估测试");
+        testProject.setProjectType("INFORMATION_SYSTEM");
+        testProject.setDescription("政府项目NESMA计算数据持久化验证项目");
+        testProject.setCreateTime(LocalDateTime.now());
+        testProject.setUpdateTime(LocalDateTime.now());
+    }
+    
+    /**
+     * 测试完整NESMA计算流程的数据持久化
+     * 验证从项目创建到计算结果保存的完整数据链路
+     */
+    @Test
+    @Order(1)
+    @Rollback(false) // 不回滚，验证真实持久化
+    void testCompleteNesmaCalculationPersistence() {
+        // 第一阶段：保存项目基础数据
+        Project savedProject = projectRepository.save(testProject);
+        assertNotNull(savedProject.getId(), "项目ID应该自动生成");
+        entityManager.flush();
+        
+        // 第二阶段：创建并保存VAF因子数据
+        List<VafFactor> vafFactors = createPdfCaseVafFactors(savedProject);
+        List<VafFactor> savedFactors = vafFactorRepository.saveAll(vafFactors);
+        assertEquals(14, savedFactors.size(), "应该保存14个VAF因子");
+        entityManager.flush();
+        
+        // 第三阶段：执行NESMA计算
+        // 设置项目的功能点基础数据（模拟PDF案例）
+        savedProject.setUnadjustedFunctionPoints(new BigDecimal("158.00")); // PDF案例的UFP值
+        savedProject.setTechnicalComplexityFactor(BigDecimal.ZERO); // 待计算
+        savedProject.setAdjustedFunctionPoints(BigDecimal.ZERO); // 待计算
+        
+        // 关联VAF因子到项目
+        savedProject.setVafFactors(savedFactors);
+        
+        // 执行VAF计算
+        BigDecimal calculatedVaf = vafCalculationService.calculateVaf(savedProject);
+        savedProject.setTechnicalComplexityFactor(calculatedVaf);
+        
+        // 执行调整后功能点计算
+        BigDecimal adjustedFP = savedProject.getUnadjustedFunctionPoints()
+                .multiply(calculatedVaf)
+                .setScale(4, RoundingMode.HALF_UP);
+        savedProject.setAdjustedFunctionPoints(adjustedFP);
+        savedProject.setUpdateTime(LocalDateTime.now());
+        
+        // 第四阶段：保存计算结果
+        Project finalProject = projectRepository.save(savedProject);
+        entityManager.flush();
+        entityManager.clear(); // 清除缓存，强制从数据库查询
+        
+        // 第五阶段：验证数据持久化完整性
+        Project retrievedProject = projectRepository.findById(finalProject.getId()).orElse(null);
+        assertNotNull(retrievedProject, "应该能够检索保存的项目");
+        
+        // 验证计算结果的精度和准确性
+        assertNotNull(retrievedProject.getTechnicalComplexityFactor(), "VAF值不能为空");
+        assertNotNull(retrievedProject.getAdjustedFunctionPoints(), "调整后功能点不能为空");
+        
+        // 验证VAF计算结果（基于PDF案例的期望值）
+        BigDecimal expectedVaf = new BigDecimal("1.0700"); // PDF案例期望VAF
+        assertEquals(expectedVaf, retrievedProject.getTechnicalComplexityFactor(),
+                    "VAF计算结果应该与PDF案例一致");
+        
+        // 验证调整后功能点计算结果
+        BigDecimal expectedAFP = new BigDecimal("158.00")
+                .multiply(expectedVaf)
+                .setScale(4, RoundingMode.HALF_UP);
+        assertEquals(expectedAFP, retrievedProject.getAdjustedFunctionPoints(),
+                    "调整后功能点应该准确计算并持久化");
+        
+        // 验证关联VAF因子数据完整性
+        List<VafFactor> persistedFactors = vafFactorRepository.findByProjectId(retrievedProject.getId());
+        assertEquals(14, persistedFactors.size(), "应该持久化14个VAF因子");
+        
+        // 验证VAF因子评分数据完整性
+        int totalScore = persistedFactors.stream()
+                .mapToInt(VafFactor::getInfluenceScore)
+                .sum();
+        assertEquals(42, totalScore, "VAF因子总评分应该为42（PDF案例）");
+    }
+    
+    /**
+     * 测试多项目并发计算的数据隔离性
+     * 验证不同项目的NESMA计算结果不会相互影响
+     */
+    @Test
+    @Order(2)
+    void testMultiProjectCalculationDataIsolation() {
+        // 创建第一个项目
+        Project project1 = createTestProject("ISOLATION-001", "数据隔离测试项目1");
+        project1 = projectRepository.save(project1);
+        List<VafFactor> factors1 = createVafFactorsWithScores(project1, 
+                new int[]{5,5,5,5,5,5,5,5,5,5,5,5,5,5}); // 最高评分
+        vafFactorRepository.saveAll(factors1);
+        
+        // 创建第二个项目  
+        Project project2 = createTestProject("ISOLATION-002", "数据隔离测试项目2");
+        project2 = projectRepository.save(project2);
+        List<VafFactor> factors2 = createVafFactorsWithScores(project2,
+                new int[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0}); // 最低评分
+        vafFactorRepository.saveAll(factors2);
+        
+        entityManager.flush();
+        entityManager.clear();
+        
+        // 分别计算VAF值
+        project1 = projectRepository.findById(project1.getId()).get();
+        project1.setVafFactors(vafFactorRepository.findByProjectId(project1.getId()));
+        BigDecimal vaf1 = vafCalculationService.calculateVaf(project1);
+        project1.setTechnicalComplexityFactor(vaf1);
+        
+        project2 = projectRepository.findById(project2.getId()).get();
+        project2.setVafFactors(vafFactorRepository.findByProjectId(project2.getId()));
+        BigDecimal vaf2 = vafCalculationService.calculateVaf(project2);
+        project2.setTechnicalComplexityFactor(vaf2);
+        
+        // 保存计算结果
+        projectRepository.save(project1);
+        projectRepository.save(project2);
+        entityManager.flush();
+        entityManager.clear();
+        
+        // 验证数据隔离性
+        Project saved1 = projectRepository.findById(project1.getId()).get();
+        Project saved2 = projectRepository.findById(project2.getId()).get();
+        
+        assertEquals(new BigDecimal("1.3500"), saved1.getTechnicalComplexityFactor(),
+                    "项目1的VAF应该为1.35（最高值）");
+        assertEquals(new BigDecimal("0.6500"), saved2.getTechnicalComplexityFactor(),
+                    "项目2的VAF应该为0.65（最低值）");
+        
+        // 验证VAF因子数据隔离
+        List<VafFactor> persistedFactors1 = vafFactorRepository.findByProjectId(saved1.getId());
+        List<VafFactor> persistedFactors2 = vafFactorRepository.findByProjectId(saved2.getId());
+        
+        assertEquals(14, persistedFactors1.size(), "项目1应该有14个VAF因子");
+        assertEquals(14, persistedFactors2.size(), "项目2应该有14个VAF因子");
+        
+        // 验证各自的评分总和
+        assertEquals(70, persistedFactors1.stream().mapToInt(VafFactor::getInfluenceScore).sum());
+        assertEquals(0, persistedFactors2.stream().mapToInt(VafFactor::getInfluenceScore).sum());
+    }
+    
+    /**
+     * 测试计算精度的数据持久化
+     * 验证BigDecimal精度在数据库存储中的保持
+     */
+    @Test
+    @Order(3)
+    void testCalculationPrecisionPersistence() {
+        // 创建会产生复杂小数的VAF评分场景
+        Project project = projectRepository.save(testProject);
+        List<VafFactor> factors = createVafFactorsWithScores(project,
+                new int[]{1,2,3,1,2,3,1,2,3,1,2,3,1,2}); // 总分29，产生复杂VAF值
+        vafFactorRepository.saveAll(factors);
+        entityManager.flush();
+        
+        // 执行计算
+        project.setVafFactors(factors);
+        BigDecimal calculatedVaf = vafCalculationService.calculateVaf(project);
+        project.setTechnicalComplexityFactor(calculatedVaf);
+        
+        // 设置基础功能点进行完整计算
+        BigDecimal ufp = new BigDecimal("100.25"); // 带小数的UFP
+        project.setUnadjustedFunctionPoints(ufp);
+        
+        BigDecimal afp = ufp.multiply(calculatedVaf).setScale(4, RoundingMode.HALF_UP);
+        project.setAdjustedFunctionPoints(afp);
+        
+        // 保存并重新查询
+        Project savedProject = projectRepository.save(project);
+        entityManager.flush();
+        entityManager.clear();
+        
+        Project retrievedProject = projectRepository.findById(savedProject.getId()).get();
+        
+        // 验证精度保持
+        BigDecimal expectedVaf = new BigDecimal("0.6500").add(new BigDecimal("0.01").multiply(new BigDecimal("29")));
+        expectedVaf = expectedVaf.setScale(4, RoundingMode.HALF_UP);
+        
+        assertEquals(expectedVaf, retrievedProject.getTechnicalComplexityFactor(),
+                    "VAF精度应该正确保持");
+        assertEquals(4, retrievedProject.getTechnicalComplexityFactor().scale(),
+                    "VAF应该保持4位小数精度");
+        
+        BigDecimal expectedAfp = ufp.multiply(expectedVaf).setScale(4, RoundingMode.HALF_UP);
+        assertEquals(expectedAfp, retrievedProject.getAdjustedFunctionPoints(),
+                    "调整后功能点精度应该正确保持");
+        assertEquals(4, retrievedProject.getAdjustedFunctionPoints().scale(),
+                    "调整后功能点应该保持4位小数精度");
+    }
+    
+    /**
+     * 测试数据完整性约束的计算场景
+     * 验证在计算过程中数据约束的有效性
+     */
+    @Test
+    @Order(4)
+    void testCalculationDataConstraints() {
+        Project project = projectRepository.save(testProject);
+        
+        // 测试VAF因子约束
+        List<VafFactor> validFactors = createVafFactorsWithScores(project,
+                new int[]{3,3,3,3,3,3,3,3,3,3,3,3,3,3});
+        List<VafFactor> savedFactors = vafFactorRepository.saveAll(validFactors);
+        assertEquals(14, savedFactors.size(), "有效VAF因子应该能正常保存");
+        
+        // 测试计算结果约束
+        BigDecimal vaf = vafCalculationService.calculateVaf(project);
+        assertTrue(vaf.compareTo(new BigDecimal("0.65")) >= 0 && 
+                   vaf.compareTo(new BigDecimal("1.35")) <= 0,
+                   "VAF值应该在有效范围内");
+        
+        project.setTechnicalComplexityFactor(vaf);
+        project.setUnadjustedFunctionPoints(new BigDecimal("100.00"));
+        project.setAdjustedFunctionPoints(vaf.multiply(new BigDecimal("100.00")));
+        
+        // 保存应该成功
+        assertDoesNotThrow(() -> {
+            projectRepository.save(project);
+            entityManager.flush();
+        }, "有效的计算结果应该能正常保存");
+    }
+    
+    /**
+     * 创建PDF案例的VAF因子数据
+     * 对应政府评审指南中的标准案例
+     */
+    private List<VafFactor> createPdfCaseVafFactors(Project project) {
+        // PDF案例中的VAF评分：总分42，VAF=1.07
+        int[] pdfScores = {4, 3, 4, 3, 3, 4, 4, 3, 3, 2, 2, 3, 1, 3};
+        return createVafFactorsWithScores(project, pdfScores);
+    }
+    
+    /**
+     * 根据评分数组创建VAF因子
+     */
+    private List<VafFactor> createVafFactorsWithScores(Project project, int[] scores) {
+        if (scores.length != 14) {
+            throw new IllegalArgumentException("必须提供14个评分值");
+        }
+        
+        List<VafFactor> factors = new ArrayList<>();
+        String[] factorTypes = {"TF01", "TF02", "TF03", "TF04", "TF05", "TF06", "TF07",
+                               "TF08", "TF09", "TF10", "TF11", "TF12", "TF13", "TF14"};
+        String[] factorNames = {"数据通信", "分布式数据处理", "性能", "高度使用配置", "交易率",
+                               "在线数据录入", "最终用户效率", "在线更新", "复杂处理", "重用性",
+                               "安装简便性", "操作简便性", "多个场地", "变更便利性"};
+        
+        for (int i = 0; i < 14; i++) {
+            VafFactor factor = new VafFactor(project, factorTypes[i], factorNames[i]);
+            factor.setInfluenceScore(scores[i]);
+            factor.setWeight(BigDecimal.ONE);
+            factor.setCreateTime(LocalDateTime.now());
+            factor.setUpdateTime(LocalDateTime.now());
+            factors.add(factor);
+        }
+        
+        return factors;
+    }
+    
+    /**
+     * 创建测试项目
+     */
+    private Project createTestProject(String code, String name) {
+        Project project = new Project();
+        project.setProjectCode(code);
+        project.setProjectName(name);
+        project.setProjectType("INFORMATION_SYSTEM");
+        project.setDescription("测试项目：" + name);
+        project.setCreateTime(LocalDateTime.now());
+        project.setUpdateTime(LocalDateTime.now());
+        return project;
+    }
+}

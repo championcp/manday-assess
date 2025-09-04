@@ -1,0 +1,438 @@
+package gov.changsha.finance.integration;
+
+import gov.changsha.finance.config.TestContainerConfiguration;
+import gov.changsha.finance.entity.Project;
+import gov.changsha.finance.entity.VafFactor;
+import gov.changsha.finance.repository.ProjectRepository;
+import gov.changsha.finance.repository.VafFactorRepository;
+import gov.changsha.finance.service.VafCalculationService;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.sql.DataSource;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * 政府项目审计日志集成测试
+ * 验证政府项目评审系统的审计追踪和数据完整性要求
+ * 
+ * 审计要求：
+ * 1. 所有数据修改操作必须记录时间戳
+ * 2. 计算过程必须可追溯和可审计
+ * 3. 数据变更历史必须完整保存
+ * 4. 支持政府审计部门的追溯查询
+ * 5. 确保数据操作的不可否认性
+ * 
+ * 政府标准：
+ * - 符合《政府投资信息化项目评审指南》审计要求
+ * - 满足国家信息安全等级保护标准
+ * - 支持财政部门审计追溯需求
+ * 
+ * @author QA Test Engineer
+ * @version 1.0.0
+ * @since 2025-09-04
+ */
+@SpringBootTest
+@Import(TestContainerConfiguration.class)
+@ActiveProfiles("integration-test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Transactional
+public class AuditTrailIntegrationTest {
+
+    @Autowired
+    private DataSource dataSource;
+    
+    @Autowired
+    private EntityManager entityManager;
+    
+    @Autowired
+    private ProjectRepository projectRepository;
+    
+    @Autowired
+    private VafFactorRepository vafFactorRepository;
+    
+    @Autowired
+    private VafCalculationService vafCalculationService;
+    
+    private Project testProject;
+    
+    @BeforeEach
+    void setUp() {
+        // 创建政府审计测试项目
+        testProject = new Project();
+        testProject.setProjectCode("AUDIT-GOV-2025-001");
+        testProject.setProjectName("长沙市政府投资信息化项目审计测试");
+        testProject.setProjectType("INFORMATION_SYSTEM");
+        testProject.setDescription("政府项目审计日志和数据追溯验证项目");
+        testProject.setCreateTime(LocalDateTime.now());
+        testProject.setUpdateTime(LocalDateTime.now());
+    }
+    
+    /**
+     * 测试数据创建的审计时间戳
+     * 验证所有新创建的数据都有正确的时间戳记录
+     */
+    @Test
+    @Order(1)
+    @Rollback(false)
+    void testDataCreationAuditTimestamps() {
+        LocalDateTime beforeCreate = LocalDateTime.now().minusSeconds(1);
+        
+        // 创建项目数据
+        Project savedProject = projectRepository.save(testProject);
+        entityManager.flush();
+        
+        LocalDateTime afterCreate = LocalDateTime.now().plusSeconds(1);
+        
+        // 验证项目创建时间戳
+        assertNotNull(savedProject.getCreateTime(), "项目创建时间不能为空");
+        assertNotNull(savedProject.getUpdateTime(), "项目更新时间不能为空");
+        assertTrue(savedProject.getCreateTime().isAfter(beforeCreate), 
+                  "项目创建时间应该在操作时间范围内");
+        assertTrue(savedProject.getCreateTime().isBefore(afterCreate), 
+                  "项目创建时间应该在操作时间范围内");
+        
+        // 创建VAF因子数据
+        List<VafFactor> vafFactors = createAuditTestVafFactors(savedProject);
+        List<VafFactor> savedFactors = vafFactorRepository.saveAll(vafFactors);
+        entityManager.flush();
+        
+        // 验证VAF因子创建时间戳
+        for (VafFactor factor : savedFactors) {
+            assertNotNull(factor.getCreateTime(), "VAF因子创建时间不能为空");
+            assertNotNull(factor.getUpdateTime(), "VAF因子更新时间不能为空");
+            assertTrue(factor.getCreateTime().isAfter(beforeCreate),
+                      "VAF因子创建时间应该正确");
+        }
+        
+        // 验证数据库中的时间戳存储
+        verifyTimestampsInDatabase(savedProject.getId());
+    }
+    
+    /**
+     * 测试数据更新的审计追踪
+     * 验证数据修改时更新时间戳的正确记录
+     */
+    @Test
+    @Order(2)
+    void testDataUpdateAuditTrail() throws InterruptedException {
+        // 第一阶段：创建初始数据
+        Project project = projectRepository.save(testProject);
+        List<VafFactor> factors = createAuditTestVafFactors(project);
+        factors = vafFactorRepository.saveAll(factors);
+        entityManager.flush();
+        
+        LocalDateTime initialCreateTime = project.getCreateTime();
+        LocalDateTime initialUpdateTime = project.getUpdateTime();
+        
+        // 等待至少1秒，确保时间戳差异
+        Thread.sleep(1000);
+        
+        // 第二阶段：更新项目数据
+        LocalDateTime beforeUpdate = LocalDateTime.now();
+        
+        project.setProjectName("已更新的政府项目审计测试");
+        project.setDescription("更新后的项目描述，用于审计追踪验证");
+        project.setUpdateTime(LocalDateTime.now());
+        
+        Project updatedProject = projectRepository.save(project);
+        entityManager.flush();
+        
+        LocalDateTime afterUpdate = LocalDateTime.now();
+        
+        // 验证更新时间戳变化
+        assertEquals(initialCreateTime, updatedProject.getCreateTime(), 
+                    "项目创建时间不应该变化");
+        assertNotEquals(initialUpdateTime, updatedProject.getUpdateTime(), 
+                       "项目更新时间应该改变");
+        assertTrue(updatedProject.getUpdateTime().isAfter(beforeUpdate), 
+                  "更新时间应该在更新操作之后");
+        assertTrue(updatedProject.getUpdateTime().isBefore(afterUpdate), 
+                  "更新时间应该在有效范围内");
+        
+        // 第三阶段：更新VAF因子数据
+        VafFactor firstFactor = factors.get(0);
+        LocalDateTime factorInitialUpdateTime = firstFactor.getUpdateTime();
+        
+        Thread.sleep(1000);
+        
+        firstFactor.setInfluenceScore(5); // 修改评分
+        firstFactor.setUpdateTime(LocalDateTime.now());
+        
+        VafFactor updatedFactor = vafFactorRepository.save(firstFactor);
+        entityManager.flush();
+        
+        // 验证VAF因子更新时间戳
+        assertNotEquals(factorInitialUpdateTime, updatedFactor.getUpdateTime(), 
+                       "VAF因子更新时间应该改变");
+    }
+    
+    /**
+     * 测试计算过程的审计追踪
+     * 验证NESMA计算过程的完整审计记录
+     */
+    @Test
+    @Order(3)
+    void testCalculationProcessAuditTrail() {
+        // 第一阶段：建立基础数据
+        Project project = projectRepository.save(testProject);
+        List<VafFactor> factors = createAuditTestVafFactors(project);
+        factors = vafFactorRepository.saveAll(factors);
+        entityManager.flush();
+        
+        // 记录计算前的状态
+        LocalDateTime beforeCalculation = LocalDateTime.now();
+        assertNull(project.getTechnicalComplexityFactor(), "计算前VAF应该为空");
+        assertNull(project.getAdjustedFunctionPoints(), "计算前AFP应该为空");
+        
+        // 第二阶段：执行NESMA计算
+        project.setVafFactors(factors);
+        project.setUnadjustedFunctionPoints(new BigDecimal("200.00"));
+        
+        // 计算VAF
+        BigDecimal calculatedVaf = vafCalculationService.calculateVaf(project);
+        project.setTechnicalComplexityFactor(calculatedVaf);
+        
+        // 计算调整后功能点
+        BigDecimal afp = project.getUnadjustedFunctionPoints().multiply(calculatedVaf);
+        project.setAdjustedFunctionPoints(afp);
+        project.setUpdateTime(LocalDateTime.now());
+        
+        // 保存计算结果
+        Project calculatedProject = projectRepository.save(project);
+        entityManager.flush();
+        
+        LocalDateTime afterCalculation = LocalDateTime.now();
+        
+        // 第三阶段：验证计算过程审计记录
+        assertNotNull(calculatedProject.getTechnicalComplexityFactor(), 
+                     "VAF计算结果应该保存");
+        assertNotNull(calculatedProject.getAdjustedFunctionPoints(), 
+                     "AFP计算结果应该保存");
+        
+        assertTrue(calculatedProject.getUpdateTime().isAfter(beforeCalculation), 
+                  "计算完成后应该更新时间戳");
+        assertTrue(calculatedProject.getUpdateTime().isBefore(afterCalculation), 
+                  "更新时间应该在有效范围内");
+        
+        // 验证计算结果的审计追踪
+        verifyCalculationAuditTrail(calculatedProject);
+    }
+    
+    /**
+     * 测试数据完整性的审计验证
+     * 确保审计数据的完整性和一致性
+     */
+    @Test
+    @Order(4)
+    void testAuditDataIntegrity() throws SQLException {
+        // 创建完整的项目数据链
+        Project project = projectRepository.save(testProject);
+        List<VafFactor> factors = createAuditTestVafFactors(project);
+        factors = vafFactorRepository.saveAll(factors);
+        
+        // 执行多次更新操作，模拟实际使用场景
+        for (int i = 1; i <= 3; i++) {
+            project.setDescription("第" + i + "次更新的项目描述");
+            project.setUpdateTime(LocalDateTime.now());
+            project = projectRepository.save(project);
+            entityManager.flush();
+            
+            // 短暂等待确保时间戳不同
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        // 验证审计数据完整性
+        try (Connection conn = dataSource.getConnection()) {
+            // 验证项目审计记录
+            String projectAuditSql = "SELECT id, create_time, update_time FROM projects WHERE id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(projectAuditSql)) {
+                stmt.setLong(1, project.getId());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    assertTrue(rs.next(), "应该能查询到项目审计记录");
+                    
+                    Timestamp createTime = rs.getTimestamp("create_time");
+                    Timestamp updateTime = rs.getTimestamp("update_time");
+                    
+                    assertNotNull(createTime, "数据库中创建时间不能为空");
+                    assertNotNull(updateTime, "数据库中更新时间不能为空");
+                    assertTrue(updateTime.getTime() >= createTime.getTime(), 
+                              "更新时间应该不早于创建时间");
+                }
+            }
+            
+            // 验证VAF因子审计记录
+            String factorAuditSql = "SELECT COUNT(*) as total, " +
+                                   "COUNT(DISTINCT create_time) as distinct_create_times, " +
+                                   "COUNT(DISTINCT update_time) as distinct_update_times " +
+                                   "FROM vaf_factors WHERE project_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(factorAuditSql)) {
+                stmt.setLong(1, project.getId());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    assertTrue(rs.next(), "应该能查询到VAF因子统计");
+                    
+                    int totalFactors = rs.getInt("total");
+                    int distinctCreateTimes = rs.getInt("distinct_create_times");
+                    int distinctUpdateTimes = rs.getInt("distinct_update_times");
+                    
+                    assertEquals(14, totalFactors, "应该有14个VAF因子");
+                    assertTrue(distinctCreateTimes >= 1, "应该有创建时间记录");
+                    assertTrue(distinctUpdateTimes >= 1, "应该有更新时间记录");
+                }
+            }
+        }
+    }
+    
+    /**
+     * 测试审计查询功能
+     * 验证政府审计部门的查询需求
+     */
+    @Test
+    @Order(5)
+    void testAuditQueryCapabilities() {
+        // 创建多个项目用于审计查询测试
+        List<Project> testProjects = new ArrayList<>();
+        LocalDateTime baseTime = LocalDateTime.now().minusDays(10);
+        
+        for (int i = 1; i <= 5; i++) {
+            Project project = new Project();
+            project.setProjectCode("AUDIT-QUERY-00" + i);
+            project.setProjectName("审计查询测试项目" + i);
+            project.setProjectType("INFORMATION_SYSTEM");
+            project.setCreateTime(baseTime.plusDays(i));
+            project.setUpdateTime(baseTime.plusDays(i));
+            
+            project = projectRepository.save(project);
+            testProjects.add(project);
+            
+            // 为每个项目创建VAF因子
+            List<VafFactor> factors = createAuditTestVafFactors(project);
+            vafFactorRepository.saveAll(factors);
+        }
+        entityManager.flush();
+        
+        // 测试按时间范围查询
+        LocalDateTime queryStartTime = baseTime.plusDays(2);
+        LocalDateTime queryEndTime = baseTime.plusDays(4);
+        
+        Query timeRangeQuery = entityManager.createQuery(
+            "SELECT p FROM Project p WHERE p.createTime BETWEEN :startTime AND :endTime " +
+            "ORDER BY p.createTime"
+        );
+        timeRangeQuery.setParameter("startTime", queryStartTime);
+        timeRangeQuery.setParameter("endTime", queryEndTime);
+        
+        @SuppressWarnings("unchecked")
+        List<Project> projectsInRange = timeRangeQuery.getResultList();
+        assertEquals(2, projectsInRange.size(), "时间范围查询应该返回2个项目");
+        
+        // 测试项目状态统计查询
+        Query statisticsQuery = entityManager.createQuery(
+            "SELECT COUNT(p), AVG(CASE WHEN p.technicalComplexityFactor IS NOT NULL THEN 1 ELSE 0 END) " +
+            "FROM Project p WHERE p.projectCode LIKE 'AUDIT-QUERY-%'"
+        );
+        Object[] statistics = (Object[]) statisticsQuery.getSingleResult();
+        Long totalProjects = (Long) statistics[0];
+        assertEquals(5L, totalProjects, "应该能统计到5个审计测试项目");
+    }
+    
+    /**
+     * 验证数据库中的时间戳存储
+     */
+    private void verifyTimestampsInDatabase(Long projectId) {
+        try (Connection conn = dataSource.getConnection()) {
+            String sql = "SELECT create_time, update_time FROM projects WHERE id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, projectId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    assertTrue(rs.next(), "应该能从数据库查询到项目记录");
+                    
+                    Timestamp createTime = rs.getTimestamp("create_time");
+                    Timestamp updateTime = rs.getTimestamp("update_time");
+                    
+                    assertNotNull(createTime, "数据库创建时间不能为空");
+                    assertNotNull(updateTime, "数据库更新时间不能为空");
+                }
+            }
+        } catch (SQLException e) {
+            fail("数据库时间戳验证失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 验证计算过程的审计追踪
+     */
+    private void verifyCalculationAuditTrail(Project project) {
+        // 验证计算结果的存在性
+        assertNotNull(project.getTechnicalComplexityFactor(), "VAF计算结果应该存在");
+        assertNotNull(project.getAdjustedFunctionPoints(), "AFP计算结果应该存在");
+        
+        // 验证计算精度
+        assertEquals(4, project.getTechnicalComplexityFactor().scale(), 
+                    "VAF精度应该为4位小数");
+        assertTrue(project.getAdjustedFunctionPoints().scale() <= 4, 
+                  "AFP精度应该不超过4位小数");
+        
+        // 验证计算合理性
+        BigDecimal expectedVaf = new BigDecimal("1.0700"); // 基于测试数据的期望值
+        assertEquals(expectedVaf, project.getTechnicalComplexityFactor(),
+                    "VAF计算结果应该符合预期");
+        
+        BigDecimal expectedAfp = project.getUnadjustedFunctionPoints().multiply(expectedVaf);
+        assertEquals(expectedAfp, project.getAdjustedFunctionPoints(),
+                    "AFP计算结果应该符合预期");
+    }
+    
+    /**
+     * 创建审计测试用的VAF因子数据
+     */
+    private List<VafFactor> createAuditTestVafFactors(Project project) {
+        List<VafFactor> factors = new ArrayList<>();
+        String[] factorTypes = {"TF01", "TF02", "TF03", "TF04", "TF05", "TF06", "TF07",
+                               "TF08", "TF09", "TF10", "TF11", "TF12", "TF13", "TF14"};
+        String[] factorNames = {"数据通信", "分布式数据处理", "性能", "高度使用配置", "交易率",
+                               "在线数据录入", "最终用户效率", "在线更新", "复杂处理", "重用性",
+                               "安装简便性", "操作简便性", "多个场地", "变更便利性"};
+        
+        // 使用PDF案例的评分：总分42，VAF=1.07
+        int[] scores = {4, 3, 4, 3, 3, 4, 4, 3, 3, 2, 2, 3, 1, 3};
+        
+        LocalDateTime now = LocalDateTime.now();
+        for (int i = 0; i < 14; i++) {
+            VafFactor factor = new VafFactor(project, factorTypes[i], factorNames[i]);
+            factor.setInfluenceScore(scores[i]);
+            factor.setWeight(BigDecimal.ONE);
+            factor.setCreateTime(now);
+            factor.setUpdateTime(now);
+            factors.add(factor);
+        }
+        
+        return factors;
+    }
+}

@@ -1,0 +1,499 @@
+package gov.changsha.finance.service;
+
+import gov.changsha.finance.service.exception.NesmaCalculationException;
+import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.ThreadMXBean;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+/**
+ * NESMA计算性能监控和优化工具
+ * 
+ * 功能特性：
+ * 1. 计算性能实时监控
+ * 2. 内存使用监控
+ * 3. 并发计算监控
+ * 4. 性能瓶颈检测
+ * 5. 自动性能优化建议
+ * 6. 性能统计和报告
+ * 
+ * @author Developer Engineer
+ * @version 1.0.0
+ * @since 2025-09-03
+ */
+@Component
+public class NesmaPerformanceMonitor {
+
+    private static final Logger logger = LoggerFactory.getLogger(NesmaPerformanceMonitor.class);
+    
+    /** 性能要求常量 */
+    private static final long MAX_CALCULATION_TIME_MS = 500L;  // 最大计算时间500毫秒
+    private static final long MAX_MEMORY_USAGE_MB = 100L;      // 最大内存使用100MB
+    private static final int MAX_CONCURRENT_CALCULATIONS = 50; // 最大并发计算数量
+    
+    /** 性能统计数据 */
+    private final AtomicLong totalCalculations = new AtomicLong(0);
+    private final AtomicLong totalCalculationTime = new AtomicLong(0);
+    private final AtomicInteger currentConcurrentCalculations = new AtomicInteger(0);
+    private final AtomicLong maxCalculationTime = new AtomicLong(0);
+    private final AtomicLong minCalculationTime = new AtomicLong(Long.MAX_VALUE);
+    
+    /** 活跃计算会话 */
+    private final ConcurrentHashMap&lt;Long, CalculationSession&gt; activeSessions = new ConcurrentHashMap&lt;&gt;();
+    
+    /** 系统监控Bean */
+    private final MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+    private final ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+    
+    /**
+     * 计算会话信息
+     */
+    public static class CalculationSession {
+        private final Long projectId;
+        private final int functionPointCount;
+        private final long startTime;
+        private final long startMemory;
+        private final String sessionId;
+        
+        public CalculationSession(Long projectId, int functionPointCount) {
+            this.projectId = projectId;
+            this.functionPointCount = functionPointCount;
+            this.startTime = System.currentTimeMillis();
+            this.startMemory = getCurrentMemoryUsage();
+            this.sessionId = generateSessionId();
+        }
+        
+        private String generateSessionId() {
+            return "NESMA_" + projectId + "_" + System.currentTimeMillis();
+        }
+        
+        private long getCurrentMemoryUsage() {
+            return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
+        }
+        
+        public Long getProjectId() { return projectId; }
+        public int getFunctionPointCount() { return functionPointCount; }
+        public long getStartTime() { return startTime; }
+        public long getStartMemory() { return startMemory; }
+        public String getSessionId() { return sessionId; }
+        
+        public long getElapsedTime() {
+            return System.currentTimeMillis() - startTime;
+        }
+        
+        public long getMemoryUsed() {
+            return getCurrentMemoryUsage() - startMemory;
+        }
+    }
+    
+    /**
+     * 性能统计信息
+     */
+    public static class PerformanceStats {
+        private final long totalCalculations;
+        private final long averageCalculationTime;
+        private final long maxCalculationTime;
+        private final long minCalculationTime;
+        private final int currentConcurrentCalculations;
+        private final double calculationsPerSecond;
+        private final long totalMemoryUsage;
+        private final String performanceGrade;
+        
+        public PerformanceStats(long totalCalculations, long averageCalculationTime,
+                              long maxCalculationTime, long minCalculationTime,
+                              int currentConcurrentCalculations, double calculationsPerSecond,
+                              long totalMemoryUsage, String performanceGrade) {
+            this.totalCalculations = totalCalculations;
+            this.averageCalculationTime = averageCalculationTime;
+            this.maxCalculationTime = maxCalculationTime;
+            this.minCalculationTime = minCalculationTime;
+            this.currentConcurrentCalculations = currentConcurrentCalculations;
+            this.calculationsPerSecond = calculationsPerSecond;
+            this.totalMemoryUsage = totalMemoryUsage;
+            this.performanceGrade = performanceGrade;
+        }
+        
+        // Getter方法
+        public long getTotalCalculations() { return totalCalculations; }
+        public long getAverageCalculationTime() { return averageCalculationTime; }
+        public long getMaxCalculationTime() { return maxCalculationTime; }
+        public long getMinCalculationTime() { return minCalculationTime; }
+        public int getCurrentConcurrentCalculations() { return currentConcurrentCalculations; }
+        public double getCalculationsPerSecond() { return calculationsPerSecond; }
+        public long getTotalMemoryUsage() { return totalMemoryUsage; }
+        public String getPerformanceGrade() { return performanceGrade; }
+    }
+    
+    /**
+     * 开始计算监控
+     * 
+     * @param projectId 项目ID
+     * @param functionPointCount 功能点数量
+     * @return 计算会话ID
+     * @throws NesmaCalculationException 当系统资源不足时抛出
+     */
+    public String startCalculationMonitoring(Long projectId, int functionPointCount) {
+        // 检查并发计算限制
+        int currentConcurrent = currentConcurrentCalculations.incrementAndGet();
+        if (currentConcurrent > MAX_CONCURRENT_CALCULATIONS) {
+            currentConcurrentCalculations.decrementAndGet();
+            throw NesmaCalculationException.insufficientResources(
+                "并发计算数量", 
+                String.format("当前并发数 %d 超过最大限制 %d", currentConcurrent, MAX_CONCURRENT_CALCULATIONS)
+            );
+        }
+        
+        // 检查内存使用
+        long currentMemory = getCurrentMemoryUsageMB();
+        if (currentMemory > MAX_MEMORY_USAGE_MB) {
+            currentConcurrentCalculations.decrementAndGet();
+            logger.warn("内存使用过高: {} MB，建议稍后重试", currentMemory);
+            // 建议进行垃圾回收
+            System.gc();
+        }
+        
+        // 创建计算会话
+        CalculationSession session = new CalculationSession(projectId, functionPointCount);
+        activeSessions.put(projectId, session);
+        
+        logger.info("开始计算监控 - 项目ID: {}, 功能点数量: {}, 会话ID: {}, 当前并发数: {}", 
+                   projectId, functionPointCount, session.getSessionId(), currentConcurrent);
+        
+        return session.getSessionId();
+    }
+    
+    /**
+     * 结束计算监控
+     * 
+     * @param projectId 项目ID
+     * @param success 计算是否成功
+     * @return 计算性能信息
+     */
+    public String endCalculationMonitoring(Long projectId, boolean success) {
+        CalculationSession session = activeSessions.remove(projectId);
+        if (session == null) {
+            logger.warn("找不到项目 {} 的计算会话", projectId);
+            return "计算会话不存在";
+        }
+        
+        long elapsedTime = session.getElapsedTime();
+        long memoryUsed = session.getMemoryUsed();
+        
+        // 更新统计数据
+        currentConcurrentCalculations.decrementAndGet();
+        totalCalculations.incrementAndGet();
+        totalCalculationTime.addAndGet(elapsedTime);
+        
+        // 更新最大最小时间
+        updateMaxTime(elapsedTime);
+        updateMinTime(elapsedTime);
+        
+        // 性能检查
+        String performanceResult = analyzePerformance(session, elapsedTime, memoryUsed, success);
+        
+        logger.info("结束计算监控 - 项目ID: {}, 耗时: {} ms, 内存使用: {} bytes, 成功: {}", 
+                   projectId, elapsedTime, memoryUsed, success);
+        
+        return performanceResult;
+    }
+    
+    /**
+     * 检查计算超时
+     * 
+     * @param projectId 项目ID
+     * @throws NesmaCalculationException 当计算超时时抛出
+     */
+    public void checkCalculationTimeout(Long projectId) {
+        CalculationSession session = activeSessions.get(projectId);
+        if (session != null) {
+            long elapsedTime = session.getElapsedTime();
+            if (elapsedTime > MAX_CALCULATION_TIME_MS) {
+                activeSessions.remove(projectId);
+                currentConcurrentCalculations.decrementAndGet();
+                
+                throw NesmaCalculationException.calculationTimeout(projectId, elapsedTime);
+            }
+        }
+    }
+    
+    /**
+     * 获取当前性能统计
+     * 
+     * @return 性能统计信息
+     */
+    public PerformanceStats getCurrentPerformanceStats() {
+        long totalCalcs = totalCalculations.get();
+        long avgTime = totalCalcs > 0 ? totalCalculationTime.get() / totalCalcs : 0;
+        long maxTime = maxCalculationTime.get();
+        long minTime = minCalculationTime.get() == Long.MAX_VALUE ? 0 : minCalculationTime.get();
+        int concurrent = currentConcurrentCalculations.get();
+        
+        // 计算每秒计算数
+        double calcsPerSecond = totalCalcs > 0 ? 
+            (double) totalCalcs / ((double) totalCalculationTime.get() / 1000.0) : 0;
+        
+        // 获取内存使用
+        long memoryUsage = getCurrentMemoryUsageMB();
+        
+        // 计算性能等级
+        String grade = calculatePerformanceGrade(avgTime, memoryUsage);
+        
+        return new PerformanceStats(
+            totalCalcs, avgTime, maxTime, minTime, 
+            concurrent, calcsPerSecond, memoryUsage, grade
+        );
+    }
+    
+    /**
+     * 获取性能优化建议
+     * 
+     * @return 优化建议列表
+     */
+    public String getPerformanceOptimizationSuggestions() {
+        StringBuilder suggestions = new StringBuilder();
+        PerformanceStats stats = getCurrentPerformanceStats();
+        
+        // 计算时间建议
+        if (stats.getAverageCalculationTime() > MAX_CALCULATION_TIME_MS * 0.8) {
+            suggestions.append("建议优化计算算法，平均计算时间较长 (")
+                      .append(stats.getAverageCalculationTime())
+                      .append("ms); ");
+        }
+        
+        // 内存使用建议
+        if (stats.getTotalMemoryUsage() > MAX_MEMORY_USAGE_MB * 0.8) {
+            suggestions.append("建议优化内存使用，当前内存占用较高 (")
+                      .append(stats.getTotalMemoryUsage())
+                      .append("MB); ");
+        }
+        
+        // 并发量建议
+        if (stats.getCurrentConcurrentCalculations() > MAX_CONCURRENT_CALCULATIONS * 0.8) {
+            suggestions.append("当前并发计算量较高 (")
+                      .append(stats.getCurrentConcurrentCalculations())
+                      .append("), 建议分批处理; ");
+        }
+        
+        // 性能等级建议
+        if ("差".equals(stats.getPerformanceGrade())) {
+            suggestions.append("系统性能等级为"差"，建议进行系统优化; ");
+        }
+        
+        if (suggestions.length() == 0) {
+            return "系统性能良好，无需特殊优化";
+        }
+        
+        return suggestions.toString();
+    }
+    
+    /**
+     * 获取活跃计算会话信息
+     * 
+     * @return 活跃会话描述
+     */
+    public String getActiveCalculationSessions() {
+        if (activeSessions.isEmpty()) {
+            return "当前无活跃计算会话";
+        }
+        
+        StringBuilder result = new StringBuilder();
+        result.append("活跃计算会话 (").append(activeSessions.size()).append("个):\n");
+        
+        activeSessions.values().forEach(session -&gt; {
+            result.append("项目ID: ").append(session.getProjectId())
+                  .append(", 功能点数: ").append(session.getFunctionPointCount())
+                  .append(", 运行时间: ").append(session.getElapsedTime()).append("ms")
+                  .append(", 内存使用: ").append(formatMemorySize(session.getMemoryUsed()))
+                  .append("\n");
+        });
+        
+        return result.toString();
+    }
+    
+    /**
+     * 重置性能统计
+     */
+    public void resetPerformanceStats() {
+        totalCalculations.set(0);
+        totalCalculationTime.set(0);
+        maxCalculationTime.set(0);
+        minCalculationTime.set(Long.MAX_VALUE);
+        
+        logger.info("性能统计已重置");
+    }
+    
+    /**
+     * 强制清理超时会话
+     * 
+     * @return 清理的会话数量
+     */
+    public int cleanupTimeoutSessions() {
+        int cleanedCount = 0;
+        long currentTime = System.currentTimeMillis();
+        
+        activeSessions.entrySet().removeIf(entry -&gt; {
+            CalculationSession session = entry.getValue();
+            boolean isTimeout = (currentTime - session.getStartTime()) > (MAX_CALCULATION_TIME_MS * 2);
+            
+            if (isTimeout) {
+                currentConcurrentCalculations.decrementAndGet();
+                logger.warn("清理超时计算会话: 项目ID={}, 耗时={}ms", 
+                           session.getProjectId(), currentTime - session.getStartTime());
+                return true;
+            }
+            return false;
+        });
+        
+        if (cleanedCount > 0) {
+            logger.info("清理了 {} 个超时计算会话", cleanedCount);
+        }
+        
+        return cleanedCount;
+    }
+    
+    /**
+     * 分析计算性能
+     */
+    private String analyzePerformance(CalculationSession session, long elapsedTime, 
+                                    long memoryUsed, boolean success) {
+        StringBuilder analysis = new StringBuilder();
+        
+        // 时间性能分析
+        if (elapsedTime > MAX_CALCULATION_TIME_MS) {
+            analysis.append("计算时间超标 (").append(elapsedTime).append("ms > ")
+                     .append(MAX_CALCULATION_TIME_MS).append("ms); ");
+        } else if (elapsedTime > MAX_CALCULATION_TIME_MS * 0.8) {
+            analysis.append("计算时间接近上限 (").append(elapsedTime).append("ms); ");
+        }
+        
+        // 内存性能分析
+        long memoryMB = memoryUsed / (1024 * 1024);
+        if (memoryMB > MAX_MEMORY_USAGE_MB * 0.8) {
+            analysis.append("内存使用较高 (").append(memoryMB).append("MB); ");
+        }
+        
+        // 功能点效率分析
+        if (session.getFunctionPointCount() > 0) {
+            double timePerFP = (double) elapsedTime / session.getFunctionPointCount();
+            if (timePerFP > 10.0) { // 每个功能点超过10ms
+                analysis.append("单个功能点计算时间较长 (")
+                         .append(String.format("%.2f", timePerFP)).append("ms/FP); ");
+            }
+        }
+        
+        // 成功率分析
+        if (!success) {
+            analysis.append("计算失败; ");
+        }
+        
+        if (analysis.length() == 0) {
+            return "性能表现良好";
+        }
+        
+        return analysis.toString();
+    }
+    
+    /**
+     * 更新最大计算时间
+     */
+    private void updateMaxTime(long elapsedTime) {
+        long currentMax = maxCalculationTime.get();
+        while (elapsedTime > currentMax) {
+            if (maxCalculationTime.compareAndSet(currentMax, elapsedTime)) {
+                break;
+            }
+            currentMax = maxCalculationTime.get();
+        }
+    }
+    
+    /**
+     * 更新最小计算时间
+     */
+    private void updateMinTime(long elapsedTime) {
+        long currentMin = minCalculationTime.get();
+        while (elapsedTime < currentMin) {
+            if (minCalculationTime.compareAndSet(currentMin, elapsedTime)) {
+                break;
+            }
+            currentMin = minCalculationTime.get();
+        }
+    }
+    
+    /**
+     * 计算性能等级
+     */
+    private String calculatePerformanceGrade(long avgTime, long memoryUsage) {
+        if (avgTime < MAX_CALCULATION_TIME_MS * 0.5 && memoryUsage < MAX_MEMORY_USAGE_MB * 0.5) {
+            return "优秀";
+        } else if (avgTime < MAX_CALCULATION_TIME_MS * 0.8 && memoryUsage < MAX_MEMORY_USAGE_MB * 0.8) {
+            return "良好";
+        } else if (avgTime < MAX_CALCULATION_TIME_MS && memoryUsage < MAX_MEMORY_USAGE_MB) {
+            return "一般";
+        } else {
+            return "差";
+        }
+    }
+    
+    /**
+     * 获取当前内存使用量(MB)
+     */
+    private long getCurrentMemoryUsageMB() {
+        return memoryBean.getHeapMemoryUsage().getUsed() / (1024 * 1024);
+    }
+    
+    /**
+     * 格式化内存大小显示
+     */
+    private String formatMemorySize(long bytes) {
+        if (bytes < 1024) {
+            return bytes + "B";
+        } else if (bytes < 1024 * 1024) {
+            return String.format("%.2fKB", bytes / 1024.0);
+        } else {
+            return String.format("%.2fMB", bytes / (1024.0 * 1024.0));
+        }
+    }
+    
+    /**
+     * 检查系统资源状态
+     * 
+     * @return 资源状态描述
+     */
+    public String checkSystemResources() {
+        StringBuilder status = new StringBuilder();
+        
+        // CPU使用率检查
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        status.append("可用CPU核心数: ").append(availableProcessors).append("; ");
+        
+        // 内存状态检查
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemory = runtime.maxMemory() / (1024 * 1024);
+        long totalMemory = runtime.totalMemory() / (1024 * 1024);
+        long freeMemory = runtime.freeMemory() / (1024 * 1024);
+        long usedMemory = totalMemory - freeMemory;
+        
+        status.append("内存状态: 已用 ").append(usedMemory)
+              .append("MB / 总共 ").append(totalMemory)
+              .append("MB / 最大 ").append(maxMemory).append("MB; ");
+        
+        // 线程状态检查
+        int threadCount = threadBean.getThreadCount();
+        status.append("活跃线程数: ").append(threadCount).append("; ");
+        
+        // 并发状态检查
+        int concurrent = currentConcurrentCalculations.get();
+        status.append("当前并发计算: ").append(concurrent)
+              .append(" / ").append(MAX_CONCURRENT_CALCULATIONS);
+        
+        return status.toString();
+    }
+}
