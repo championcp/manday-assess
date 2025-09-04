@@ -13,7 +13,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - /Users/chengpeng/docker/app/data/manday-assess/postgres:/var/lib/postgresql/data
       - ./deployment/init-db:/docker-entrypoint-initdb.d
     networks:
       - manday-assess-network
@@ -32,7 +32,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - /Users/chengpeng/docker/app/data/manday-assess/redis:/data
     networks:
       - manday-assess-network
     command: redis-server --appendonly yes --requirepass ""
@@ -55,7 +55,7 @@ services:
     ports:
       - "5050:80"
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - /Users/chengpeng/docker/app/data/manday-assess/pgadmin:/var/lib/pgadmin
     networks:
       - manday-assess-network
     depends_on:
@@ -76,13 +76,14 @@ services:
       - redis
     restart: unless-stopped
 
-volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-  pgadmin_data:
-    driver: local
+# 数据卷现已改为绑定挂载到指定目录
+# volumes:
+#   postgres_data:
+#     driver: local
+#   redis_data:
+#     driver: local
+#   pgadmin_data:
+#     driver: local
 
 networks:
   manday-assess-network:

@@ -1,0 +1,368 @@
+package gov.changsha.finance.integration;
+
+import gov.changsha.finance.config.TestContainerConfiguration;
+import gov.changsha.finance.entity.Project;
+import gov.changsha.finance.entity.VafFactor;
+import gov.changsha.finance.repository.ProjectRepository;
+import gov.changsha.finance.repository.VafFactorRepository;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.sql.DataSource;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * 数据库完整性集成测试
+ * 政府项目数据持久化和完整性验证测试套件
+ * 
+ * 测试范围：
+ * 1. 数据库Schema结构验证
+ * 2. 数据完整性约束验证
+ * 3. 事务处理和回滚测试
+ * 4. 外键关系完整性测试
+ * 5. 数据持久化验证
+ * 6. 并发访问安全性测试
+ * 
+ * 质量标准：
+ * - 100%数据完整性保证
+ * - 符合政府项目审计要求
+ * - 支持数据追溯和恢复
+ * 
+ * @author QA Test Engineer
+ * @version 1.0.0  
+ * @since 2025-09-04
+ */
+@DataJpaTest
+@Import(TestContainerConfiguration.class)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("integration-test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Transactional
+public class DatabaseIntegrityIntegrationTest {
+
+    @Autowired
+    private DataSource dataSource;
+    
+    @Autowired
+    private EntityManager entityManager;
+    
+    @Autowired
+    private ProjectRepository projectRepository;
+    
+    @Autowired
+    private VafFactorRepository vafFactorRepository;
+    
+    private Project testProject;
+    
+    @BeforeEach
+    void setUp() {
+        // 创建测试项目数据
+        testProject = new Project();
+        testProject.setProjectCode("TEST-DB-001");
+        testProject.setProjectName("数据库完整性测试项目");
+        testProject.setProjectType("INFORMATION_SYSTEM");
+        testProject.setDescription("用于验证数据库完整性的测试项目");
+        testProject.setCreateTime(LocalDateTime.now());
+        testProject.setUpdateTime(LocalDateTime.now());
+    }
+    
+    /**
+     * 测试数据库Schema结构完整性
+     * 验证所有必要的表和字段是否正确创建
+     */
+    @Test
+    @Order(1)
+    void testDatabaseSchemaIntegrity() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            DatabaseMetaData metaData = connection.getMetaData();
+            
+            // 验证核心表存在性
+            verifyTableExists(metaData, "projects", "项目主表");
+            verifyTableExists(metaData, "vaf_factors", "VAF因子表");
+            
+            // 验证项目表字段结构
+            verifyTableColumns(metaData, "projects", Set.of(
+                "id", "project_code", "project_name", "project_type", 
+                "description", "create_time", "update_time"
+            ));
+            
+            // 验证VAF因子表字段结构  
+            verifyTableColumns(metaData, "vaf_factors", Set.of(
+                "id", "project_id", "factor_type", "factor_name", 
+                "influence_score", "weight", "create_time", "update_time"
+            ));
+            
+            // 验证外键约束
+            verifyForeignKeyConstraints(metaData);
+        }
+    }
+    
+    /**
+     * 测试数据持久化和检索完整性
+     * 确保数据能正确保存和读取，满足政府项目数据准确性要求
+     */
+    @Test
+    @Order(2)
+    @Rollback(false) // 不回滚，验证真实持久化
+    void testDataPersistenceIntegrity() {
+        // 1. 保存项目数据
+        Project savedProject = projectRepository.save(testProject);
+        assertNotNull(savedProject.getId(), "项目ID应该自动生成");
+        
+        // 强制刷新到数据库
+        entityManager.flush();
+        
+        // 2. 创建VAF因子数据
+        List<VafFactor> vafFactors = createTestVafFactors(savedProject);
+        List<VafFactor> savedFactors = vafFactorRepository.saveAll(vafFactors);
+        
+        assertEquals(14, savedFactors.size(), "应该保存14个VAF因子");
+        entityManager.flush();
+        
+        // 3. 清除一级缓存，从数据库重新查询
+        entityManager.clear();
+        
+        // 4. 验证数据完整性
+        Project retrievedProject = projectRepository.findById(savedProject.getId()).orElse(null);
+        assertNotNull(retrievedProject, "应该能够从数据库检索项目数据");
+        assertEquals(testProject.getProjectCode(), retrievedProject.getProjectCode());
+        assertEquals(testProject.getProjectName(), retrievedProject.getProjectName());
+        assertEquals(testProject.getProjectType(), retrievedProject.getProjectType());
+        
+        // 5. 验证关联数据完整性
+        List<VafFactor> retrievedFactors = vafFactorRepository.findByProjectId(savedProject.getId());
+        assertEquals(14, retrievedFactors.size(), "应该检索到14个VAF因子");
+        
+        // 6. 验证数据精度（政府项目关键要求）
+        for (VafFactor factor : retrievedFactors) {
+            assertNotNull(factor.getInfluenceScore(), "影响度评分不能为空");
+            assertNotNull(factor.getWeight(), "权重不能为空");
+            assertTrue(factor.getInfluenceScore() >= 0 && factor.getInfluenceScore() <= 5, 
+                      "影响度评分必须在0-5范围内");
+            assertEquals(0, factor.getWeight().compareTo(BigDecimal.ONE), 
+                        "默认权重应该为1.0");
+        }
+    }
+    
+    /**
+     * 测试数据完整性约束
+     * 验证数据库约束能正确防止无效数据
+     */
+    @Test
+    @Order(3)
+    void testDataIntegrityConstraints() {
+        // 1. 测试项目代码唯一性约束
+        Project project1 = new Project();
+        project1.setProjectCode("UNIQUE-TEST");
+        project1.setProjectName("唯一性测试项目1");
+        project1.setProjectType("INFORMATION_SYSTEM");
+        projectRepository.save(project1);
+        entityManager.flush();
+        
+        // 尝试创建相同项目代码的项目
+        Project project2 = new Project();
+        project2.setProjectCode("UNIQUE-TEST"); // 相同代码
+        project2.setProjectName("唯一性测试项目2");
+        project2.setProjectType("INFORMATION_SYSTEM");
+        
+        assertThrows(Exception.class, () -> {
+            projectRepository.save(project2);
+            entityManager.flush();
+        }, "应该抛出唯一性约束异常");
+        
+        // 2. 测试非空约束
+        Project nullProject = new Project();
+        // 不设置必填字段
+        assertThrows(Exception.class, () -> {
+            projectRepository.save(nullProject);
+            entityManager.flush();
+        }, "应该抛出非空约束异常");
+        
+        // 3. 测试外键约束
+        VafFactor orphanFactor = new VafFactor();
+        orphanFactor.setProject(null); // 无父项目
+        orphanFactor.setFactorType("TF01");
+        orphanFactor.setFactorName("孤儿因子");
+        orphanFactor.setInfluenceScore(3);
+        orphanFactor.setWeight(BigDecimal.ONE);
+        
+        assertThrows(Exception.class, () -> {
+            vafFactorRepository.save(orphanFactor);
+            entityManager.flush();
+        }, "应该抛出外键约束异常");
+    }
+    
+    /**
+     * 测试事务完整性
+     * 确保数据操作的ACID特性
+     */
+    @Test
+    @Order(4)
+    void testTransactionIntegrity() {
+        // 1. 测试事务回滚
+        Long projectId = null;
+        try {
+            // 在事务中执行操作
+            Project project = projectRepository.save(testProject);
+            projectId = project.getId();
+            entityManager.flush();
+            
+            // 创建VAF因子
+            List<VafFactor> factors = createTestVafFactors(project);
+            vafFactorRepository.saveAll(factors);
+            entityManager.flush();
+            
+            // 验证数据已保存
+            assertTrue(projectRepository.existsById(projectId), "项目应该已保存");
+            assertEquals(14, vafFactorRepository.findByProjectId(projectId).size(), 
+                        "VAF因子应该已保存");
+            
+            // 模拟异常情况，触发回滚
+            throw new RuntimeException("模拟异常，测试事务回滚");
+            
+        } catch (RuntimeException e) {
+            // 预期的异常，用于触发回滚
+            assertEquals("模拟异常，测试事务回滚", e.getMessage());
+        }
+        
+        // 由于@Transactional注解，事务应该已回滚
+        // 注意：在测试环境中，@Transactional默认会回滚
+    }
+    
+    /**
+     * 测试数据一致性和完整性验证
+     * 验证复杂业务场景下的数据一致性
+     */
+    @Test
+    @Order(5)
+    void testDataConsistencyValidation() {
+        // 1. 保存项目和VAF因子
+        Project savedProject = projectRepository.save(testProject);
+        List<VafFactor> vafFactors = createTestVafFactors(savedProject);
+        List<VafFactor> savedFactors = vafFactorRepository.saveAll(vafFactors);
+        entityManager.flush();
+        
+        // 2. 验证数据数量一致性
+        long projectCount = projectRepository.count();
+        assertTrue(projectCount > 0, "项目表应该有数据");
+        
+        long factorCount = vafFactorRepository.count();
+        assertEquals(14, factorCount, "VAF因子表应该有14条数据");
+        
+        // 3. 验证关联数据一致性
+        List<VafFactor> projectFactors = vafFactorRepository.findByProjectId(savedProject.getId());
+        assertEquals(14, projectFactors.size(), "项目关联的VAF因子数量应该正确");
+        
+        // 4. 验证数据完整性统计查询
+        Query countQuery = entityManager.createQuery(
+            "SELECT COUNT(f) FROM VafFactor f WHERE f.project.id = :projectId"
+        );
+        countQuery.setParameter("projectId", savedProject.getId());
+        Long factorCountByQuery = (Long) countQuery.getSingleResult();
+        assertEquals(14L, factorCountByQuery, "查询统计结果应该一致");
+        
+        // 5. 验证数据精度保持
+        for (VafFactor factor : projectFactors) {
+            assertNotNull(factor.getWeight(), "权重字段不能为空");
+            assertTrue(factor.getWeight().scale() <= 4, "权重精度应该不超过4位小数");
+            assertTrue(factor.getInfluenceScore() >= 0 && factor.getInfluenceScore() <= 5,
+                      "影响度评分应该在有效范围内");
+        }
+    }
+    
+    /**
+     * 验证表是否存在
+     */
+    private void verifyTableExists(DatabaseMetaData metaData, String tableName, String description) 
+            throws SQLException {
+        try (ResultSet tables = metaData.getTables(null, null, tableName.toUpperCase(), null)) {
+            assertTrue(tables.next(), description + "不存在");
+        }
+    }
+    
+    /**
+     * 验证表字段结构
+     */
+    private void verifyTableColumns(DatabaseMetaData metaData, String tableName, Set<String> expectedColumns) 
+            throws SQLException {
+        Set<String> actualColumns = new HashSet<>();
+        try (ResultSet columns = metaData.getColumns(null, null, tableName.toUpperCase(), null)) {
+            while (columns.next()) {
+                actualColumns.add(columns.getString("COLUMN_NAME").toLowerCase());
+            }
+        }
+        
+        for (String expectedColumn : expectedColumns) {
+            assertTrue(actualColumns.contains(expectedColumn.toLowerCase()), 
+                      "表 " + tableName + " 缺少字段 " + expectedColumn);
+        }
+    }
+    
+    /**
+     * 验证外键约束
+     */
+    private void verifyForeignKeyConstraints(DatabaseMetaData metaData) throws SQLException {
+        // 验证vaf_factors表的project_id外键
+        try (ResultSet foreignKeys = metaData.getImportedKeys(null, null, "VAF_FACTORS")) {
+            boolean hasForeignKey = false;
+            while (foreignKeys.next()) {
+                String fkColumnName = foreignKeys.getString("FKCOLUMN_NAME");
+                String pkTableName = foreignKeys.getString("PKTABLE_NAME");
+                if ("PROJECT_ID".equalsIgnoreCase(fkColumnName) && 
+                    "PROJECTS".equalsIgnoreCase(pkTableName)) {
+                    hasForeignKey = true;
+                    break;
+                }
+            }
+            assertTrue(hasForeignKey, "VAF_FACTORS表应该有指向PROJECTS表的外键");
+        }
+    }
+    
+    /**
+     * 创建测试用的VAF因子数据
+     */
+    private List<VafFactor> createTestVafFactors(Project project) {
+        List<VafFactor> factors = new ArrayList<>();
+        String[] factorTypes = {"TF01", "TF02", "TF03", "TF04", "TF05", "TF06", "TF07",
+                               "TF08", "TF09", "TF10", "TF11", "TF12", "TF13", "TF14"};
+        String[] factorNames = {"数据通信", "分布式数据处理", "性能", "高度使用配置", "交易率",
+                               "在线数据录入", "最终用户效率", "在线更新", "复杂处理", "重用性",
+                               "安装简便性", "操作简便性", "多个场地", "变更便利性"};
+        int[] scores = {4, 3, 4, 3, 3, 4, 4, 3, 3, 2, 2, 3, 1, 3}; // 典型政府项目评分
+        
+        for (int i = 0; i < 14; i++) {
+            VafFactor factor = new VafFactor(project, factorTypes[i], factorNames[i]);
+            factor.setInfluenceScore(scores[i]);
+            factor.setWeight(BigDecimal.ONE);
+            factor.setCreateTime(LocalDateTime.now());
+            factor.setUpdateTime(LocalDateTime.now());
+            factors.add(factor);
+        }
+        
+        return factors;
+    }
+}

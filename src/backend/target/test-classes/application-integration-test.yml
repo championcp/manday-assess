@@ -1,0 +1,130 @@
+# 集成测试专用配置文件
+# 政府项目数据完整性和审计要求的测试配置
+
+spring:
+  # 应用基础配置
+  application:
+    name: manday-assess-backend-integration-test
+    
+  # 数据源配置 - 由Testcontainers自动配置
+  # ServiceConnection注解会自动配置数据库连接参数
+  
+  # JPA配置 - 针对集成测试优化
+  jpa:
+    hibernate:
+      # 每次测试都重新创建数据库结构，确保测试环境干净
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        # 启用SQL统计，用于性能分析
+        generate_statistics: true
+        # 启用二级缓存（测试环境可选）
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        # 批处理配置
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+          
+  # Flyway配置 - 集成测试中启用数据库迁移
+  flyway:
+    enabled: true
+    locations: classpath:db/migration,classpath:db/testdata
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    # 清理数据库，确保测试环境干净
+    clean-on-validation-error: true
+    
+  # Jackson配置
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: non_null
+    
+  # Redis配置 - 暂时禁用，专注数据库测试
+  data:
+    redis:
+      enabled: false
+
+# 服务器配置
+server:
+  port: 0  # 随机端口，避免端口冲突
+  
+# 日志配置 - 详细日志用于测试调试
+logging:
+  level:
+    # 应用日志
+    gov.changsha.finance: DEBUG
+    # Spring框架日志
+    org.springframework.transaction: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.test: DEBUG
+    # Hibernate SQL日志
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.stat: DEBUG
+    # Testcontainers日志
+    org.testcontainers: INFO
+    com.github.dockerjava: WARN
+    # PostgreSQL驱动日志
+    org.postgresql: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+
+# 管理端点配置 - 测试环境全部开放
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+
+# 测试专用配置
+test:
+  # 数据完整性验证配置
+  data-integrity:
+    enabled: true
+    validation-timeout: 30s
+    
+  # 审计日志验证配置
+  audit:
+    enabled: true
+    log-all-operations: true
+    
+  # NESMA计算验证配置
+  nesma:
+    calculation-precision: 4
+    validation-strictness: high
+    
+  # 性能测试配置
+  performance:
+    max-response-time: 2000ms
+    concurrent-users: 10
+    
+# 政府项目质量标准配置
+quality:
+  # 数据准确性要求
+  accuracy:
+    decimal-precision: 4
+    rounding-mode: HALF_UP
+    
+  # 审计追踪要求
+  audit:
+    track-all-calculations: true
+    preserve-calculation-history: true
+    log-user-operations: true
+    
+  # 安全要求
+  security:
+    enable-data-encryption: false  # 测试环境暂时关闭
+    log-security-events: true

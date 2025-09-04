@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: gov.changsha.finance.integration.TestcontainersBasicTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.359 s -- in gov.changsha.finance.integration.TestcontainersBasicTest
