@@ -1,0 +1,560 @@
+package gov.changsha.finance.service;
+
+import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Arrays;
+
+/**
+ * NESMA计算辅助工具类
+ * 提供NESMA计算过程中的各种辅助方法和常量定义
+ * 
+ * 包含功能:
+ * - 复杂度判定矩阵和算法
+ * - 权重查询和验证
+ * - 数据验证和格式化
+ * - 常用计算公式
+ * 
+ * @author Developer Engineer
+ * @version 1.0.0
+ * @since 2025-09-03
+ */
+@Component
+public class NesmaCalculationUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(NesmaCalculationUtils.class);
+    
+    /**
+     * 计算精度配置
+     */
+    public static final int DECIMAL_SCALE = 4;
+    public static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+    
+    /**
+     * 功能点类型常量
+     */
+    public static final String FP_TYPE_ILF = "ILF"; // 内部逻辑文件
+    public static final String FP_TYPE_EIF = "EIF"; // 外部接口文件  
+    public static final String FP_TYPE_EI = "EI";   // 外部输入
+    public static final String FP_TYPE_EO = "EO";   // 外部输出
+    public static final String FP_TYPE_EQ = "EQ";   // 外部查询
+    
+    /**
+     * 复杂度等级常量
+     */
+    public static final String COMPLEXITY_LOW = "LOW";
+    public static final String COMPLEXITY_MEDIUM = "MEDIUM";
+    public static final String COMPLEXITY_HIGH = "HIGH";
+    
+    /**
+     * 支持的功能点类型列表
+     */
+    public static final List&lt;String&gt; SUPPORTED_FP_TYPES = Arrays.asList(
+        FP_TYPE_ILF, FP_TYPE_EIF, FP_TYPE_EI, FP_TYPE_EO, FP_TYPE_EQ
+    );
+    
+    /**
+     * 支持的复杂度等级列表
+     */
+    public static final List&lt;String&gt; SUPPORTED_COMPLEXITY_LEVELS = Arrays.asList(
+        COMPLEXITY_LOW, COMPLEXITY_MEDIUM, COMPLEXITY_HIGH
+    );
+    
+    /**
+     * ILF/EIF复杂度判定矩阵
+     * [DET数量范围][RET数量范围] = 复杂度等级
+     */
+    private static final String[][] ILF_EIF_COMPLEXITY_MATRIX = {
+        // RET: 1      2-5     6+
+        {"LOW",    "MEDIUM", "HIGH"},    // DET: 1-19
+        {"MEDIUM", "HIGH",   "HIGH"},    // DET: 20-50  
+        {"HIGH",   "HIGH",   "HIGH"}     // DET: 51+
+    };
+    
+    /**
+     * EI/EQ复杂度判定矩阵  
+     * [DET数量范围][FTR数量范围] = 复杂度等级
+     */
+    private static final String[][] EI_EQ_COMPLEXITY_MATRIX = {
+        // FTR: 0-1    2       3+
+        {"LOW",    "MEDIUM", "HIGH"},    // DET: 1-4
+        {"MEDIUM", "HIGH",   "HIGH"},    // DET: 5-15
+        {"HIGH",   "HIGH",   "HIGH"}     // DET: 16+
+    };
+    
+    /**
+     * EO复杂度判定矩阵
+     * [DET数量范围][FTR数量范围] = 复杂度等级  
+     */
+    private static final String[][] EO_COMPLEXITY_MATRIX = {
+        // FTR: 0-1    2       3+
+        {"LOW",    "MEDIUM", "HIGH"},    // DET: 1-5
+        {"MEDIUM", "HIGH",   "HIGH"},    // DET: 6-19
+        {"HIGH",   "HIGH",   "HIGH"}     // DET: 20+
+    };
+    
+    /**
+     * NESMA标准权重表
+     */
+    private static final Map&lt;String, Map&lt;String, BigDecimal&gt;&gt; STANDARD_WEIGHTS = new HashMap&lt;&gt;();
+    
+    static {
+        // 初始化标准权重表
+        initializeStandardWeights();
+    }
+    
+    /**
+     * 初始化NESMA标准权重配置
+     */
+    private static void initializeStandardWeights() {
+        // ILF权重配置
+        Map&lt;String, BigDecimal&gt; ilfWeights = new HashMap&lt;&gt;();
+        ilfWeights.put(COMPLEXITY_LOW, new BigDecimal("7.0000"));
+        ilfWeights.put(COMPLEXITY_MEDIUM, new BigDecimal("10.0000"));
+        ilfWeights.put(COMPLEXITY_HIGH, new BigDecimal("15.0000"));
+        STANDARD_WEIGHTS.put(FP_TYPE_ILF, ilfWeights);
+        
+        // EIF权重配置  
+        Map&lt;String, BigDecimal&gt; eifWeights = new HashMap&lt;&gt;();
+        eifWeights.put(COMPLEXITY_LOW, new BigDecimal("5.0000"));
+        eifWeights.put(COMPLEXITY_MEDIUM, new BigDecimal("7.0000"));
+        eifWeights.put(COMPLEXITY_HIGH, new BigDecimal("10.0000"));
+        STANDARD_WEIGHTS.put(FP_TYPE_EIF, eifWeights);
+        
+        // EI权重配置
+        Map&lt;String, BigDecimal&gt; eiWeights = new HashMap&lt;&gt;();
+        eiWeights.put(COMPLEXITY_LOW, new BigDecimal("3.0000"));
+        eiWeights.put(COMPLEXITY_MEDIUM, new BigDecimal("4.0000"));
+        eiWeights.put(COMPLEXITY_HIGH, new BigDecimal("6.0000"));
+        STANDARD_WEIGHTS.put(FP_TYPE_EI, eiWeights);
+        
+        // EO权重配置
+        Map&lt;String, BigDecimal&gt; eoWeights = new HashMap&lt;&gt;();
+        eoWeights.put(COMPLEXITY_LOW, new BigDecimal("4.0000"));
+        eoWeights.put(COMPLEXITY_MEDIUM, new BigDecimal("5.0000"));
+        eoWeights.put(COMPLEXITY_HIGH, new BigDecimal("7.0000"));
+        STANDARD_WEIGHTS.put(FP_TYPE_EO, eoWeights);
+        
+        // EQ权重配置
+        Map&lt;String, BigDecimal&gt; eqWeights = new HashMap&lt;&gt;();
+        eqWeights.put(COMPLEXITY_LOW, new BigDecimal("3.0000"));
+        eqWeights.put(COMPLEXITY_MEDIUM, new BigDecimal("4.0000"));
+        eqWeights.put(COMPLEXITY_HIGH, new BigDecimal("6.0000"));
+        STANDARD_WEIGHTS.put(FP_TYPE_EQ, eqWeights);
+    }
+    
+    /**
+     * 根据功能点类型和计数确定复杂度等级
+     * 
+     * @param functionPointType 功能点类型
+     * @param detCount DET计数
+     * @param retCount RET计数 (对ILF/EIF有效)
+     * @param ftrCount FTR计数 (对EI/EO/EQ有效)
+     * @return 复杂度等级
+     */
+    public String determineComplexityLevel(String functionPointType, Integer detCount, 
+                                         Integer retCount, Integer ftrCount) {
+        // 参数验证
+        validateFunctionPointType(functionPointType);
+        
+        // 确保计数值不为null
+        int det = (detCount != null) ? detCount : 1;
+        int ret = (retCount != null) ? retCount : 1;
+        int ftr = (ftrCount != null) ? ftrCount : 1;
+        
+        String complexity;
+        
+        switch (functionPointType) {
+            case FP_TYPE_ILF:
+            case FP_TYPE_EIF:
+                complexity = determineDataComplexity(det, ret);
+                break;
+            case FP_TYPE_EI:
+            case FP_TYPE_EQ:
+                complexity = determineTransactionComplexity(det, ftr, EI_EQ_COMPLEXITY_MATRIX);
+                break;
+            case FP_TYPE_EO:
+                complexity = determineTransactionComplexity(det, ftr, EO_COMPLEXITY_MATRIX);
+                break;
+            default:
+                logger.warn("未知功能点类型: {}, 默认设置为MEDIUM复杂度", functionPointType);
+                return COMPLEXITY_MEDIUM;
+        }
+        
+        logger.debug("复杂度判定: 类型={}, DET={}, RET={}, FTR={}, 结果={}", 
+                    functionPointType, det, ret, ftr, complexity);
+        
+        return complexity;
+    }
+    
+    /**
+     * 数据功能复杂度判定 (用于ILF/EIF)
+     * 基于DET和RET数量使用复杂度矩阵判定
+     * 
+     * @param detCount DET计数
+     * @param retCount RET计数  
+     * @return 复杂度等级
+     */
+    private String determineDataComplexity(int detCount, int retCount) {
+        int detIndex = getDetIndexForData(detCount);
+        int retIndex = getRetIndex(retCount);
+        
+        return ILF_EIF_COMPLEXITY_MATRIX[detIndex][retIndex];
+    }
+    
+    /**
+     * 事务功能复杂度判定 (用于EI/EO/EQ)
+     * 基于DET和FTR数量使用复杂度矩阵判定
+     * 
+     * @param detCount DET计数
+     * @param ftrCount FTR计数
+     * @param matrix 使用的复杂度矩阵
+     * @return 复杂度等级
+     */
+    private String determineTransactionComplexity(int detCount, int ftrCount, String[][] matrix) {
+        int detIndex, ftrIndex;
+        
+        if (matrix == EO_COMPLEXITY_MATRIX) {
+            detIndex = getDetIndexForEo(detCount);
+        } else {
+            detIndex = getDetIndexForEiEq(detCount);
+        }
+        
+        ftrIndex = getFtrIndex(ftrCount);
+        
+        return matrix[detIndex][ftrIndex];
+    }
+    
+    /**
+     * 获取数据功能(ILF/EIF)的DET索引
+     * 
+     * @param detCount DET计数
+     * @return 矩阵索引 (0-2)
+     */
+    private int getDetIndexForData(int detCount) {
+        if (detCount &lt;= 19) return 0;       // 1-19
+        else if (detCount &lt;= 50) return 1;  // 20-50
+        else return 2;                      // 51+
+    }
+    
+    /**
+     * 获取EI/EQ的DET索引
+     * 
+     * @param detCount DET计数
+     * @return 矩阵索引 (0-2)
+     */
+    private int getDetIndexForEiEq(int detCount) {
+        if (detCount &lt;= 4) return 0;        // 1-4
+        else if (detCount &lt;= 15) return 1;  // 5-15
+        else return 2;                      // 16+
+    }
+    
+    /**
+     * 获取EO的DET索引
+     * 
+     * @param detCount DET计数
+     * @return 矩阵索引 (0-2)
+     */
+    private int getDetIndexForEo(int detCount) {
+        if (detCount &lt;= 5) return 0;        // 1-5
+        else if (detCount &lt;= 19) return 1;  // 6-19
+        else return 2;                      // 20+
+    }
+    
+    /**
+     * 获取RET索引
+     * 
+     * @param retCount RET计数
+     * @return 矩阵索引 (0-2)
+     */
+    private int getRetIndex(int retCount) {
+        if (retCount &lt;= 1) return 0;        // 0-1
+        else if (retCount &lt;= 5) return 1;   // 2-5
+        else return 2;                      // 6+
+    }
+    
+    /**
+     * 获取FTR索引
+     * 
+     * @param ftrCount FTR计数
+     * @return 矩阵索引 (0-2)
+     */
+    private int getFtrIndex(int ftrCount) {
+        if (ftrCount &lt;= 1) return 0;        // 0-1
+        else if (ftrCount == 2) return 1;   // 2
+        else return 2;                      // 3+
+    }
+    
+    /**
+     * 获取标准权重值
+     * 
+     * @param functionPointType 功能点类型
+     * @param complexityLevel 复杂度等级
+     * @return 标准权重值
+     * @throws IllegalArgumentException 当类型或复杂度不支持时抛出
+     */
+    public BigDecimal getStandardWeight(String functionPointType, String complexityLevel) {
+        validateFunctionPointType(functionPointType);
+        validateComplexityLevel(complexityLevel);
+        
+        Map&lt;String, BigDecimal&gt; typeWeights = STANDARD_WEIGHTS.get(functionPointType);
+        if (typeWeights == null) {
+            throw new IllegalArgumentException("不支持的功能点类型: " + functionPointType);
+        }
+        
+        BigDecimal weight = typeWeights.get(complexityLevel);
+        if (weight == null) {
+            throw new IllegalArgumentException(
+                String.format("功能点类型 %s 不支持复杂度等级 %s", functionPointType, complexityLevel));
+        }
+        
+        return weight.setScale(DECIMAL_SCALE, ROUNDING_MODE);
+    }
+    
+    /**
+     * 计算VAF调整因子
+     * 根据GSC总分计算VAF值
+     * 
+     * @param gscTotal GSC总分 (范围: 0-70)
+     * @return VAF值
+     * @throws IllegalArgumentException 当GSC总分超出有效范围时抛出
+     */
+    public BigDecimal calculateVafValue(int gscTotal) {
+        if (gscTotal &lt; 0 || gscTotal &gt; 70) {
+            throw new IllegalArgumentException("GSC总分必须在0-70之间，当前值: " + gscTotal);
+        }
+        
+        // VAF = (GSC × 0.01) + 0.65
+        BigDecimal vaf = new BigDecimal(gscTotal)
+                .multiply(new BigDecimal("0.01"))
+                .add(new BigDecimal("0.65"))
+                .setScale(DECIMAL_SCALE, ROUNDING_MODE);
+        
+        logger.debug("VAF计算: GSC总分={}, VAF值={}", gscTotal, vaf);
+        
+        return vaf;
+    }
+    
+    /**
+     * 验证功能点类型有效性
+     * 
+     * @param functionPointType 功能点类型
+     * @throws IllegalArgumentException 当类型无效时抛出
+     */
+    public void validateFunctionPointType(String functionPointType) {
+        if (functionPointType == null || functionPointType.trim().isEmpty()) {
+            throw new IllegalArgumentException("功能点类型不能为空");
+        }
+        
+        if (!SUPPORTED_FP_TYPES.contains(functionPointType)) {
+            throw new IllegalArgumentException(
+                String.format("不支持的功能点类型: %s, 支持的类型: %s", 
+                            functionPointType, SUPPORTED_FP_TYPES));
+        }
+    }
+    
+    /**
+     * 验证复杂度等级有效性
+     * 
+     * @param complexityLevel 复杂度等级
+     * @throws IllegalArgumentException 当复杂度等级无效时抛出
+     */
+    public void validateComplexityLevel(String complexityLevel) {
+        if (complexityLevel == null || complexityLevel.trim().isEmpty()) {
+            throw new IllegalArgumentException("复杂度等级不能为空");
+        }
+        
+        if (!SUPPORTED_COMPLEXITY_LEVELS.contains(complexityLevel)) {
+            throw new IllegalArgumentException(
+                String.format("不支持的复杂度等级: %s, 支持的等级: %s", 
+                            complexityLevel, SUPPORTED_COMPLEXITY_LEVELS));
+        }
+    }
+    
+    /**
+     * 验证计数值有效性
+     * 
+     * @param count 计数值
+     * @param countType 计数类型 (用于错误信息)
+     * @throws IllegalArgumentException 当计数值无效时抛出
+     */
+    public void validateCount(Integer count, String countType) {
+        if (count == null) {
+            throw new IllegalArgumentException(countType + "不能为空");
+        }
+        
+        if (count &lt; 0) {
+            throw new IllegalArgumentException(countType + "不能为负数，当前值: " + count);
+        }
+        
+        if (count == 0) {
+            logger.warn("{}为0，这可能不符合NESMA标准", countType);
+        }
+        
+        // 合理性检查 - 通常DET/RET/FTR不会超过1000
+        if (count &gt; 1000) {
+            logger.warn("{}值异常大: {}，请检查数据准确性", countType, count);
+        }
+    }
+    
+    /**
+     * 验证GSC因子值有效性
+     * 
+     * @param factor GSC因子值
+     * @param factorName 因子名称
+     * @throws IllegalArgumentException 当因子值无效时抛出
+     */
+    public void validateGscFactor(Integer factor, String factorName) {
+        if (factor == null) {
+            throw new IllegalArgumentException(factorName + "不能为空");
+        }
+        
+        if (factor &lt; 0 || factor &gt; 5) {
+            throw new IllegalArgumentException(
+                String.format("%s必须在0-5之间，当前值: %d", factorName, factor));
+        }
+    }
+    
+    /**
+     * 格式化BigDecimal数值为标准精度
+     * 
+     * @param value 原始数值
+     * @return 格式化后的数值
+     */
+    public BigDecimal formatDecimal(BigDecimal value) {
+        if (value == null) {
+            return BigDecimal.ZERO.setScale(DECIMAL_SCALE, ROUNDING_MODE);
+        }
+        
+        return value.setScale(DECIMAL_SCALE, ROUNDING_MODE);
+    }
+    
+    /**
+     * 安全的BigDecimal加法
+     * 
+     * @param left 左操作数
+     * @param right 右操作数  
+     * @return 相加结果
+     */
+    public BigDecimal safeAdd(BigDecimal left, BigDecimal right) {
+        BigDecimal leftVal = (left != null) ? left : BigDecimal.ZERO;
+        BigDecimal rightVal = (right != null) ? right : BigDecimal.ZERO;
+        
+        return leftVal.add(rightVal).setScale(DECIMAL_SCALE, ROUNDING_MODE);
+    }
+    
+    /**
+     * 安全的BigDecimal乘法
+     * 
+     * @param left 左操作数
+     * @param right 右操作数
+     * @return 相乘结果
+     */
+    public BigDecimal safeMultiply(BigDecimal left, BigDecimal right) {
+        BigDecimal leftVal = (left != null) ? left : BigDecimal.ZERO;
+        BigDecimal rightVal = (right != null) ? right : BigDecimal.ONE;
+        
+        return leftVal.multiply(rightVal).setScale(DECIMAL_SCALE, ROUNDING_MODE);
+    }
+    
+    /**
+     * 获取功能点类型中文描述
+     * 
+     * @param type 功能点类型英文代码
+     * @return 中文描述
+     */
+    public String getFunctionPointTypeDescription(String type) {
+        switch (type) {
+            case FP_TYPE_ILF: return "内部逻辑文件";
+            case FP_TYPE_EIF: return "外部接口文件";
+            case FP_TYPE_EI: return "外部输入";
+            case FP_TYPE_EO: return "外部输出";
+            case FP_TYPE_EQ: return "外部查询";
+            default: return "未知类型";
+        }
+    }
+    
+    /**
+     * 获取复杂度等级中文描述
+     * 
+     * @param level 复杂度等级英文代码
+     * @return 中文描述
+     */
+    public String getComplexityLevelDescription(String level) {
+        switch (level) {
+            case COMPLEXITY_LOW: return "低";
+            case COMPLEXITY_MEDIUM: return "中";
+            case COMPLEXITY_HIGH: return "高";
+            default: return "未知";
+        }
+    }
+    
+    /**
+     * 生成计算过程说明文本
+     * 
+     * @param functionPointType 功能点类型
+     * @param detCount DET计数
+     * @param retCount RET计数  
+     * @param ftrCount FTR计数
+     * @param complexityLevel 复杂度等级
+     * @param weight 权重值
+     * @return 计算过程说明
+     */
+    public String generateCalculationDescription(String functionPointType, 
+                                                Integer detCount, Integer retCount, Integer ftrCount,
+                                                String complexityLevel, BigDecimal weight) {
+        StringBuilder desc = new StringBuilder();
+        
+        desc.append("功能点类型: ").append(getFunctionPointTypeDescription(functionPointType))
+            .append(" (").append(functionPointType).append(")");
+        
+        if (FP_TYPE_ILF.equals(functionPointType) || FP_TYPE_EIF.equals(functionPointType)) {
+            desc.append(", DET数量: ").append(detCount)
+                .append(", RET数量: ").append(retCount);
+        } else {
+            desc.append(", DET数量: ").append(detCount)
+                .append(", FTR数量: ").append(ftrCount);
+        }
+        
+        desc.append(" → 复杂度: ").append(getComplexityLevelDescription(complexityLevel))
+            .append(" (").append(complexityLevel).append(")")
+            .append(" → 权重: ").append(weight).append("功能点");
+        
+        return desc.toString();
+    }
+    
+    /**
+     * 检查计算结果的合理性
+     * 
+     * @param totalFunctionPoints 总功能点数
+     * @param functionPointCount 功能点数量
+     * @return 检查结果描述
+     */
+    public String validateCalculationResult(BigDecimal totalFunctionPoints, int functionPointCount) {
+        if (totalFunctionPoints == null) {
+            return "计算结果为空";
+        }
+        
+        if (totalFunctionPoints.compareTo(BigDecimal.ZERO) &lt;= 0) {
+            return "计算结果不能为0或负数";
+        }
+        
+        if (functionPointCount == 0) {
+            return "没有功能点参与计算";
+        }
+        
+        // 平均权重检查 (通常在3-15之间)
+        BigDecimal avgWeight = totalFunctionPoints.divide(new BigDecimal(functionPointCount), DECIMAL_SCALE, ROUNDING_MODE);
+        if (avgWeight.compareTo(new BigDecimal("1")) &lt; 0 || avgWeight.compareTo(new BigDecimal("20")) &gt; 0) {
+            return String.format("平均权重异常: %.4f，建议检查功能点分类和复杂度判定", avgWeight);
+        }
+        
+        return "计算结果验证通过";
+    }
+}

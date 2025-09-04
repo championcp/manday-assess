@@ -201,6 +201,12 @@ public class Project implements Serializable {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CalculationResult> calculationResults;
 
+    /**
+     * VAF调整因子列表
+     */
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<VafFactor> vafFactors;
+
     // 构造方法
     public Project() {}
 
@@ -434,6 +440,14 @@ public class Project implements Serializable {
 
     public void setCalculationResults(List<CalculationResult> calculationResults) {
         this.calculationResults = calculationResults;
+    }
+
+    public List<VafFactor> getVafFactors() {
+        return vafFactors;
+    }
+
+    public void setVafFactors(List<VafFactor> vafFactors) {
+        this.vafFactors = vafFactors;
     }
 
     @Override

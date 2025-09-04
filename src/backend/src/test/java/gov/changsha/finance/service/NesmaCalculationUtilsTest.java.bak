@@ -1,0 +1,530 @@
+package gov.changsha.finance.service;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * NESMA计算辅助工具类单元测试
+ * 
+ * 测试覆盖范围：
+ * 1. 复杂度判定矩阵测试
+ * 2. 权重查询测试
+ * 3. VAF计算测试
+ * 4. 数据验证测试
+ * 5. 工具方法测试
+ * 6. 边界条件测试
+ * 7. 异常处理测试
+ * 
+ * @author Developer Engineer
+ * @version 1.0.0
+ * @since 2025-09-03
+ */
+@DisplayName("NESMA计算辅助工具类测试")
+class NesmaCalculationUtilsTest {
+
+    private NesmaCalculationUtils utils;
+    
+    private static final int DECIMAL_SCALE = 4;
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+
+    @BeforeEach
+    void setUp() {
+        utils = new NesmaCalculationUtils();
+    }
+
+    /**
+     * ILF/EIF复杂度判定测试
+     */
+    @ParameterizedTest
+    @DisplayName("ILF复杂度判定 - 参数化测试")
+    @CsvSource({
+        // DET, RET, 期望复杂度
+        "1, 1, LOW",      // 最小值边界
+        "19, 1, LOW",     // DET上边界
+        "20, 1, MEDIUM",  // DET跨边界
+        "50, 1, MEDIUM",  // DET中边界
+        "51, 1, HIGH",    // DET跨高边界
+        "15, 2, MEDIUM",  // RET跨边界
+        "15, 5, MEDIUM",  // RET上边界
+        "15, 6, HIGH",    // RET跨高边界
+        "25, 3, HIGH",    // 双中等值
+        "100, 10, HIGH"   // 极大值
+    })
+    void testIlfComplexityDetermination(int det, int ret, String expected) {
+        String actual = utils.determineComplexityLevel("ILF", det, ret, 0);
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @DisplayName("EIF复杂度判定 - 参数化测试")
+    @CsvSource({
+        "10, 1, LOW",
+        "19, 1, LOW",
+        "20, 1, MEDIUM",
+        "15, 3, MEDIUM",
+        "15, 6, HIGH",
+        "60, 2, HIGH"
+    })
+    void testEifComplexityDetermination(int det, int ret, String expected) {
+        String actual = utils.determineComplexityLevel("EIF", det, ret, 0);
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * EI/EQ复杂度判定测试
+     */
+    @ParameterizedTest
+    @DisplayName("EI复杂度判定 - 参数化测试")
+    @CsvSource({
+        // DET, FTR, 期望复杂度
+        "1, 0, LOW",      // 最小值
+        "1, 1, LOW",      // FTR边界
+        "4, 1, LOW",      // DET上边界
+        "4, 2, MEDIUM",   // FTR跨边界
+        "5, 1, MEDIUM",   // DET跨边界
+        "15, 1, MEDIUM",  // DET上边界
+        "10, 2, HIGH",    // 双中等值
+        "16, 1, HIGH",    // DET跨高边界
+        "3, 3, HIGH",     // FTR高值
+        "20, 5, HIGH"     // 极大值
+    })
+    void testEiComplexityDetermination(int det, int ftr, String expected) {
+        String actual = utils.determineComplexityLevel("EI", det, 0, ftr);
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @DisplayName("EQ复杂度判定 - 参数化测试")
+    @CsvSource({
+        "2, 1, LOW",
+        "4, 1, LOW", 
+        "3, 2, MEDIUM",
+        "8, 1, MEDIUM",
+        "15, 1, MEDIUM",
+        "10, 2, HIGH",
+        "16, 1, HIGH",
+        "4, 4, HIGH"
+    })
+    void testEqComplexityDetermination(int det, int ftr, String expected) {
+        String actual = utils.determineComplexityLevel("EQ", det, 0, ftr);
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * EO复杂度判定测试
+     */
+    @ParameterizedTest
+    @DisplayName("EO复杂度判定 - 参数化测试")
+    @CsvSource({
+        // DET, FTR, 期望复杂度
+        "1, 0, LOW",
+        "1, 1, LOW",
+        "5, 1, LOW",      // DET边界
+        "5, 2, MEDIUM",   // FTR跨边界
+        "6, 1, MEDIUM",   // DET跨边界
+        "19, 1, MEDIUM",  // DET上边界
+        "19, 2, HIGH",    // 双边界
+        "20, 1, HIGH",    // DET跨高边界
+        "10, 3, HIGH",    // FTR高值
+        "25, 5, HIGH"     // 极大值
+    })
+    void testEoComplexityDetermination(int det, int ftr, String expected) {
+        String actual = utils.determineComplexityLevel("EO", det, 0, ftr);
+        assertEquals(expected, actual);
+    }
+
+    /**
+     * 标准权重测试
+     */
+    @Test
+    @DisplayName("ILF标准权重测试")
+    void testIlfStandardWeights() {
+        assertEquals(new BigDecimal("7.0000"), utils.getStandardWeight("ILF", "LOW"));
+        assertEquals(new BigDecimal("10.0000"), utils.getStandardWeight("ILF", "MEDIUM"));
+        assertEquals(new BigDecimal("15.0000"), utils.getStandardWeight("ILF", "HIGH"));
+    }
+
+    @Test
+    @DisplayName("EIF标准权重测试")
+    void testEifStandardWeights() {
+        assertEquals(new BigDecimal("5.0000"), utils.getStandardWeight("EIF", "LOW"));
+        assertEquals(new BigDecimal("7.0000"), utils.getStandardWeight("EIF", "MEDIUM"));
+        assertEquals(new BigDecimal("10.0000"), utils.getStandardWeight("EIF", "HIGH"));
+    }
+
+    @Test
+    @DisplayName("EI标准权重测试")
+    void testEiStandardWeights() {
+        assertEquals(new BigDecimal("3.0000"), utils.getStandardWeight("EI", "LOW"));
+        assertEquals(new BigDecimal("4.0000"), utils.getStandardWeight("EI", "MEDIUM"));
+        assertEquals(new BigDecimal("6.0000"), utils.getStandardWeight("EI", "HIGH"));
+    }
+
+    @Test
+    @DisplayName("EO标准权重测试")
+    void testEoStandardWeights() {
+        assertEquals(new BigDecimal("4.0000"), utils.getStandardWeight("EO", "LOW"));
+        assertEquals(new BigDecimal("5.0000"), utils.getStandardWeight("EO", "MEDIUM"));
+        assertEquals(new BigDecimal("7.0000"), utils.getStandardWeight("EO", "HIGH"));
+    }
+
+    @Test
+    @DisplayName("EQ标准权重测试")
+    void testEqStandardWeights() {
+        assertEquals(new BigDecimal("3.0000"), utils.getStandardWeight("EQ", "LOW"));
+        assertEquals(new BigDecimal("4.0000"), utils.getStandardWeight("EQ", "MEDIUM"));
+        assertEquals(new BigDecimal("6.0000"), utils.getStandardWeight("EQ", "HIGH"));
+    }
+
+    /**
+     * VAF计算测试
+     */
+    @ParameterizedTest
+    @DisplayName("VAF计算 - 参数化测试")
+    @CsvSource({
+        // GSC总分, 期望VAF值
+        "0, 0.6500",      // 最小GSC
+        "35, 1.0000",     // 平均GSC (35*0.01+0.65=1.00)
+        "42, 1.0700",     // 默认GSC (14*3*0.01+0.65=1.07)
+        "70, 1.3500"      // 最大GSC
+    })
+    void testCalculateVafValue(int gscTotal, String expectedVaf) {
+        BigDecimal expected = new BigDecimal(expectedVaf);
+        BigDecimal actual = utils.calculateVafValue(gscTotal);
+        assertEquals(0, expected.compareTo(actual));
+    }
+
+    /**
+     * 验证方法测试
+     */
+    @Test
+    @DisplayName("功能点类型验证 - 成功场景")
+    void testValidateFunctionPointType_Success() {
+        // 所有支持的类型都应该验证成功
+        assertDoesNotThrow(() -&gt; utils.validateFunctionPointType("ILF"));
+        assertDoesNotThrow(() -&gt; utils.validateFunctionPointType("EIF"));
+        assertDoesNotThrow(() -&gt; utils.validateFunctionPointType("EI"));
+        assertDoesNotThrow(() -&gt; utils.validateFunctionPointType("EO"));
+        assertDoesNotThrow(() -&gt; utils.validateFunctionPointType("EQ"));
+    }
+
+    @ParameterizedTest
+    @DisplayName("功能点类型验证 - 异常场景")
+    @ValueSource(strings = {"", "INVALID", "ilf", "ei", "UNKNOWN"})
+    void testValidateFunctionPointType_Exception(String invalidType) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.validateFunctionPointType(invalidType));
+        assertTrue(exception.getMessage().contains("不支持的功能点类型") ||
+                  exception.getMessage().contains("功能点类型不能为空"));
+    }
+
+    @Test
+    @DisplayName("功能点类型验证 - 空值异常")
+    void testValidateFunctionPointType_Null() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.validateFunctionPointType(null));
+        assertTrue(exception.getMessage().contains("功能点类型不能为空"));
+    }
+
+    @Test
+    @DisplayName("复杂度等级验证 - 成功场景")
+    void testValidateComplexityLevel_Success() {
+        assertDoesNotThrow(() -&gt; utils.validateComplexityLevel("LOW"));
+        assertDoesNotThrow(() -&gt; utils.validateComplexityLevel("MEDIUM"));
+        assertDoesNotThrow(() -&gt; utils.validateComplexityLevel("HIGH"));
+    }
+
+    @ParameterizedTest
+    @DisplayName("复杂度等级验证 - 异常场景")
+    @ValueSource(strings = {"", "INVALID", "low", "medium", "UNKNOWN"})
+    void testValidateComplexityLevel_Exception(String invalidLevel) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.validateComplexityLevel(invalidLevel));
+        assertTrue(exception.getMessage().contains("不支持的复杂度等级") ||
+                  exception.getMessage().contains("复杂度等级不能为空"));
+    }
+
+    @Test
+    @DisplayName("计数值验证 - 成功场景")
+    void testValidateCount_Success() {
+        assertDoesNotThrow(() -&gt; utils.validateCount(0, "DET"));
+        assertDoesNotThrow(() -&gt; utils.validateCount(1, "RET"));
+        assertDoesNotThrow(() -&gt; utils.validateCount(100, "FTR"));
+        assertDoesNotThrow(() -&gt; utils.validateCount(1000, "DET"));
+    }
+
+    @Test
+    @DisplayName("计数值验证 - 异常场景")
+    void testValidateCount_Exception() {
+        // 测试null值
+        IllegalArgumentException nullException = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.validateCount(null, "DET"));
+        assertTrue(nullException.getMessage().contains("DET不能为空"));
+
+        // 测试负值
+        IllegalArgumentException negativeException = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.validateCount(-1, "RET"));
+        assertTrue(negativeException.getMessage().contains("RET不能为负数"));
+    }
+
+    @Test
+    @DisplayName("GSC因子验证 - 成功场景")
+    void testValidateGscFactor_Success() {
+        for (int i = 0; i &lt;= 5; i++) {
+            final int factor = i;
+            assertDoesNotThrow(() -&gt; utils.validateGscFactor(factor, "测试因子"));
+        }
+    }
+
+    @Test
+    @DisplayName("GSC因子验证 - 异常场景")
+    void testValidateGscFactor_Exception() {
+        // 测试null值
+        IllegalArgumentException nullException = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.validateGscFactor(null, "数据通信"));
+        assertTrue(nullException.getMessage().contains("数据通信不能为空"));
+
+        // 测试超出范围值
+        IllegalArgumentException lowException = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.validateGscFactor(-1, "性能要求"));
+        assertTrue(lowException.getMessage().contains("性能要求必须在0-5之间"));
+
+        IllegalArgumentException highException = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.validateGscFactor(6, "性能要求"));
+        assertTrue(highException.getMessage().contains("性能要求必须在0-5之间"));
+    }
+
+    /**
+     * VAF计算异常测试
+     */
+    @Test
+    @DisplayName("VAF计算 - GSC超出范围异常")
+    void testCalculateVafValue_Exception() {
+        // 测试负值
+        IllegalArgumentException negativeException = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.calculateVafValue(-1));
+        assertTrue(negativeException.getMessage().contains("GSC总分必须在0-70之间"));
+
+        // 测试超出最大值
+        IllegalArgumentException overMaxException = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.calculateVafValue(71));
+        assertTrue(overMaxException.getMessage().contains("GSC总分必须在0-70之间"));
+    }
+
+    /**
+     * 权重查询异常测试
+     */
+    @Test
+    @DisplayName("权重查询 - 不支持的功能点类型异常")
+    void testGetStandardWeight_InvalidType() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.getStandardWeight("INVALID", "LOW"));
+        assertTrue(exception.getMessage().contains("不支持的功能点类型"));
+    }
+
+    @Test
+    @DisplayName("权重查询 - 不支持的复杂度等级异常")
+    void testGetStandardWeight_InvalidComplexity() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+            () -&gt; utils.getStandardWeight("ILF", "INVALID"));
+        assertTrue(exception.getMessage().contains("不支持的复杂度等级"));
+    }
+
+    /**
+     * 工具方法测试
+     */
+    @Test
+    @DisplayName("数值格式化测试")
+    void testFormatDecimal() {
+        // 测试null值
+        BigDecimal nullResult = utils.formatDecimal(null);
+        assertEquals(new BigDecimal("0.0000"), nullResult);
+        assertEquals(DECIMAL_SCALE, nullResult.scale());
+
+        // 测试正常值
+        BigDecimal normalResult = utils.formatDecimal(new BigDecimal("3.14159"));
+        assertEquals(new BigDecimal("3.1416"), normalResult); // 四舍五入
+        assertEquals(DECIMAL_SCALE, normalResult.scale());
+
+        // 测试整数
+        BigDecimal integerResult = utils.formatDecimal(new BigDecimal("10"));
+        assertEquals(new BigDecimal("10.0000"), integerResult);
+        assertEquals(DECIMAL_SCALE, integerResult.scale());
+    }
+
+    @Test
+    @DisplayName("安全加法测试")
+    void testSafeAdd() {
+        // 测试正常情况
+        BigDecimal result1 = utils.safeAdd(new BigDecimal("3.5"), new BigDecimal("2.5"));
+        assertEquals(new BigDecimal("6.0000"), result1);
+
+        // 测试null值处理
+        BigDecimal result2 = utils.safeAdd(null, new BigDecimal("5"));
+        assertEquals(new BigDecimal("5.0000"), result2);
+
+        BigDecimal result3 = utils.safeAdd(new BigDecimal("3"), null);
+        assertEquals(new BigDecimal("3.0000"), result3);
+
+        BigDecimal result4 = utils.safeAdd(null, null);
+        assertEquals(new BigDecimal("0.0000"), result4);
+    }
+
+    @Test
+    @DisplayName("安全乘法测试")
+    void testSafeMultiply() {
+        // 测试正常情况
+        BigDecimal result1 = utils.safeMultiply(new BigDecimal("3.5"), new BigDecimal("2"));
+        assertEquals(new BigDecimal("7.0000"), result1);
+
+        // 测试null值处理
+        BigDecimal result2 = utils.safeMultiply(null, new BigDecimal("5"));
+        assertEquals(new BigDecimal("0.0000"), result2); // null被视为0
+
+        BigDecimal result3 = utils.safeMultiply(new BigDecimal("3"), null);
+        assertEquals(new BigDecimal("3.0000"), result3); // null被视为1
+
+        BigDecimal result4 = utils.safeMultiply(null, null);
+        assertEquals(new BigDecimal("0.0000"), result4); // 0 * 1 = 0
+    }
+
+    /**
+     * 描述方法测试
+     */
+    @Test
+    @DisplayName("功能点类型描述测试")
+    void testGetFunctionPointTypeDescription() {
+        assertEquals("内部逻辑文件", utils.getFunctionPointTypeDescription("ILF"));
+        assertEquals("外部接口文件", utils.getFunctionPointTypeDescription("EIF"));
+        assertEquals("外部输入", utils.getFunctionPointTypeDescription("EI"));
+        assertEquals("外部输出", utils.getFunctionPointTypeDescription("EO"));
+        assertEquals("外部查询", utils.getFunctionPointTypeDescription("EQ"));
+        assertEquals("未知类型", utils.getFunctionPointTypeDescription("UNKNOWN"));
+        assertEquals("未知类型", utils.getFunctionPointTypeDescription(null));
+    }
+
+    @Test
+    @DisplayName("复杂度等级描述测试")
+    void testGetComplexityLevelDescription() {
+        assertEquals("低", utils.getComplexityLevelDescription("LOW"));
+        assertEquals("中", utils.getComplexityLevelDescription("MEDIUM"));
+        assertEquals("高", utils.getComplexityLevelDescription("HIGH"));
+        assertEquals("未知", utils.getComplexityLevelDescription("UNKNOWN"));
+        assertEquals("未知", utils.getComplexityLevelDescription(null));
+    }
+
+    @Test
+    @DisplayName("计算过程描述生成测试")
+    void testGenerateCalculationDescription() {
+        // 测试数据功能(ILF)
+        String ilfDesc = utils.generateCalculationDescription("ILF", 15, 2, 0, 
+                                                             "MEDIUM", new BigDecimal("10.0000"));
+        assertTrue(ilfDesc.contains("内部逻辑文件"));
+        assertTrue(ilfDesc.contains("DET数量: 15"));
+        assertTrue(ilfDesc.contains("RET数量: 2"));
+        assertTrue(ilfDesc.contains("复杂度: 中"));
+        assertTrue(ilfDesc.contains("权重: 10.0000"));
+
+        // 测试事务功能(EI)
+        String eiDesc = utils.generateCalculationDescription("EI", 5, 0, 2,
+                                                           "MEDIUM", new BigDecimal("4.0000"));
+        assertTrue(eiDesc.contains("外部输入"));
+        assertTrue(eiDesc.contains("DET数量: 5"));
+        assertTrue(eiDesc.contains("FTR数量: 2"));
+        assertTrue(eiDesc.contains("复杂度: 中"));
+        assertTrue(eiDesc.contains("权重: 4.0000"));
+    }
+
+    @Test
+    @DisplayName("计算结果验证测试")
+    void testValidateCalculationResult() {
+        // 测试正常结果
+        String normalResult = utils.validateCalculationResult(new BigDecimal("50.0000"), 10);
+        assertEquals("计算结果验证通过", normalResult);
+
+        // 测试null结果
+        String nullResult = utils.validateCalculationResult(null, 5);
+        assertEquals("计算结果为空", nullResult);
+
+        // 测试零结果
+        String zeroResult = utils.validateCalculationResult(BigDecimal.ZERO, 5);
+        assertEquals("计算结果不能为0或负数", zeroResult);
+
+        // 测试负结果
+        String negativeResult = utils.validateCalculationResult(new BigDecimal("-5"), 3);
+        assertEquals("计算结果不能为0或负数", negativeResult);
+
+        // 测试功能点数量为0
+        String noFpResult = utils.validateCalculationResult(new BigDecimal("10"), 0);
+        assertEquals("没有功能点参与计算", noFpResult);
+
+        // 测试异常平均权重
+        String abnormalResult = utils.validateCalculationResult(new BigDecimal("100"), 2); // 平均50
+        assertTrue(abnormalResult.contains("平均权重异常"));
+    }
+
+    /**
+     * Null值处理测试
+     */
+    @Test
+    @DisplayName("复杂度判定 - null值处理")
+    void testComplexityDetermination_NullHandling() {
+        // DET为null，应该默认为1
+        String result1 = utils.determineComplexityLevel("ILF", null, 1, 0);
+        assertEquals("LOW", result1); // 1 DET, 1 RET → LOW
+
+        // RET为null，应该默认为1  
+        String result2 = utils.determineComplexityLevel("ILF", 15, null, 0);
+        assertEquals("LOW", result2); // 15 DET, 1 RET → LOW
+
+        // FTR为null，应该默认为1
+        String result3 = utils.determineComplexityLevel("EI", 3, 0, null);
+        assertEquals("LOW", result3); // 3 DET, 1 FTR → LOW
+    }
+
+    @Test
+    @DisplayName("未知功能点类型处理")
+    void testUnknownFunctionPointType() {
+        // 应该返回MEDIUM复杂度并记录警告
+        String result = utils.determineComplexityLevel("UNKNOWN_TYPE", 10, 2, 1);
+        assertEquals("MEDIUM", result);
+    }
+
+    /**
+     * 边界条件测试
+     */
+    @Test
+    @DisplayName("边界条件 - 极值测试")
+    void testBoundaryConditions_ExtremeValues() {
+        // 测试极小值
+        assertDoesNotThrow(() -&gt; utils.determineComplexityLevel("ILF", 1, 1, 0));
+        
+        // 测试极大值
+        assertDoesNotThrow(() -&gt; utils.determineComplexityLevel("ILF", 10000, 1000, 0));
+        
+        // 测试VAF边界值
+        assertEquals(new BigDecimal("0.6500"), utils.calculateVafValue(0));
+        assertEquals(new BigDecimal("1.3500"), utils.calculateVafValue(70));
+    }
+
+    @Test
+    @DisplayName("权重精度测试")
+    void testWeightPrecision() {
+        // 确保所有权重都是4位小数精度
+        for (String type : new String[]{"ILF", "EIF", "EI", "EO", "EQ"}) {
+            for (String complexity : new String[]{"LOW", "MEDIUM", "HIGH"}) {
+                BigDecimal weight = utils.getStandardWeight(type, complexity);
+                assertEquals(DECIMAL_SCALE, weight.scale());
+            }
+        }
+    }
+}

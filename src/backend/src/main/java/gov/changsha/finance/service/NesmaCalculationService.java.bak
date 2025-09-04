@@ -1,0 +1,474 @@
+package gov.changsha.finance.service;
+
+import gov.changsha.finance.entity.*;
+import gov.changsha.finance.repository.ProjectRepository;
+import gov.changsha.finance.service.exception.NesmaCalculationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * NESMA功能点计算核心服务
+ * 实现严格按照《长沙市财政评审中心政府投资信息化项目评审指南》标准的NESMA计算算法
+ * 
+ * 关键特性:
+ * - BigDecimal精确计算，确保政府级数据精度
+ * - 完整的计算过程记录和审计日志
+ * - 支持五种功能点类型：ILF、EIF、EI、EO、EQ
+ * - 复杂度自动判定和权重配置
+ * - 性能优化，单次计算&lt;500ms
+ * 
+ * @author Developer Engineer  
+ * @version 1.0.0
+ * @since 2025-09-03
+ */
+@Service
+@Transactional
+public class NesmaCalculationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(NesmaCalculationService.class);
+    
+    /**
+     * BigDecimal计算精度配置 - 符合政府项目审计要求
+     */
+    private static final int DECIMAL_SCALE = 4;
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+    
+    /**
+     * NESMA标准权重配置矩阵
+     * 按照NESMA 2.1标准定义的标准权重值
+     */
+    private static final Map&lt;String, Map&lt;String, BigDecimal&gt;&gt; NESMA_WEIGHT_MATRIX = new HashMap&lt;&gt;();
+    
+    static {
+        // ILF (内部逻辑文件) 权重矩阵
+        Map&lt;String, BigDecimal&gt; ilfWeights = new HashMap&lt;&gt;();
+        ilfWeights.put("LOW", new BigDecimal("7.0000"));
+        ilfWeights.put("MEDIUM", new BigDecimal("10.0000"));  
+        ilfWeights.put("HIGH", new BigDecimal("15.0000"));
+        NESMA_WEIGHT_MATRIX.put("ILF", ilfWeights);
+        
+        // EIF (外部接口文件) 权重矩阵
+        Map&lt;String, BigDecimal&gt; eifWeights = new HashMap&lt;&gt;();
+        eifWeights.put("LOW", new BigDecimal("5.0000"));
+        eifWeights.put("MEDIUM", new BigDecimal("7.0000"));
+        eifWeights.put("HIGH", new BigDecimal("10.0000"));
+        NESMA_WEIGHT_MATRIX.put("EIF", eifWeights);
+        
+        // EI (外部输入) 权重矩阵
+        Map&lt;String, BigDecimal&gt; eiWeights = new HashMap&lt;&gt;();
+        eiWeights.put("LOW", new BigDecimal("3.0000"));
+        eiWeights.put("MEDIUM", new BigDecimal("4.0000"));
+        eiWeights.put("HIGH", new BigDecimal("6.0000"));
+        NESMA_WEIGHT_MATRIX.put("EI", eiWeights);
+        
+        // EO (外部输出) 权重矩阵
+        Map&lt;String, BigDecimal&gt; eoWeights = new HashMap&lt;&gt;();
+        eoWeights.put("LOW", new BigDecimal("4.0000"));
+        eoWeights.put("MEDIUM", new BigDecimal("5.0000"));
+        eoWeights.put("HIGH", new BigDecimal("7.0000"));
+        NESMA_WEIGHT_MATRIX.put("EO", eoWeights);
+        
+        // EQ (外部查询) 权重矩阵
+        Map&lt;String, BigDecimal&gt; eqWeights = new HashMap&lt;&gt;();
+        eqWeights.put("LOW", new BigDecimal("3.0000"));
+        eqWeights.put("MEDIUM", new BigDecimal("4.0000"));
+        eqWeights.put("HIGH", new BigDecimal("6.0000"));
+        NESMA_WEIGHT_MATRIX.put("EQ", eqWeights);
+    }
+    
+    @Autowired
+    private ProjectRepository projectRepository;
+    
+    @Autowired
+    private NesmaPerformanceMonitor performanceMonitor;
+    
+    /**
+     * 执行完整的NESMA功能点计算
+     * 
+     * @param projectId 项目ID
+     * @return CalculationResult 计算结果实体
+     * @throws IllegalArgumentException 当项目不存在或数据无效时抛出
+     * @throws RuntimeException 当计算过程中出现错误时抛出
+     */
+    public CalculationResult calculateNesmaFunctionPoints(Long projectId) {
+        logger.info("开始执行NESMA功能点计算，项目ID: {}", projectId);
+        
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            // 1. 验证项目存在性并获取项目信息
+            Project project = validateAndGetProject(projectId);
+            
+            // 2. 创建计算结果记录
+            CalculationResult result = new CalculationResult(projectId, "NESMA_CALCULATION");
+            
+            // 3. 获取项目的所有功能点
+            List&lt;FunctionPoint&gt; functionPoints = project.getFunctionPoints();
+            if (functionPoints == null || functionPoints.isEmpty()) {
+                throw new IllegalArgumentException("项目功能点数据为空，无法执行计算");
+            }
+            
+            // 4. 执行核心计算逻辑
+            BigDecimal totalFunctionPoints = calculateTotalFunctionPoints(functionPoints);
+            
+            // 5. 应用VAF调整因子（如果启用）
+            BigDecimal adjustedFunctionPoints = applyVafAdjustment(project, totalFunctionPoints);
+            
+            // 6. 计算预估人月数和成本
+            BigDecimal estimatedPersonMonths = calculatePersonMonths(adjustedFunctionPoints);
+            BigDecimal estimatedCost = calculateEstimatedCost(estimatedPersonMonths);
+            
+            // 7. 设置计算结果
+            result.setTotalFunctionPoints(totalFunctionPoints.setScale(DECIMAL_SCALE, ROUNDING_MODE));
+            result.setAdjustedFunctionPoints(adjustedFunctionPoints.setScale(DECIMAL_SCALE, ROUNDING_MODE));
+            result.setEstimatedPersonMonths(estimatedPersonMonths.setScale(DECIMAL_SCALE, ROUNDING_MODE));
+            result.setEstimatedCost(estimatedCost.setScale(DECIMAL_SCALE, ROUNDING_MODE));
+            
+            // 8. 完成计算
+            result.completeCalculation();
+            
+            long endTime = System.currentTimeMillis();
+            logger.info("NESMA功能点计算完成，项目ID: {}, 耗时: {}ms, 总功能点: {}, 调整后功能点: {}", 
+                       projectId, endTime - startTime, totalFunctionPoints, adjustedFunctionPoints);
+            
+            return result;
+            
+        } catch (Exception e) {
+            logger.error("NESMA功能点计算失败，项目ID: {}, 错误信息: {}", projectId, e.getMessage(), e);
+            
+            CalculationResult failedResult = new CalculationResult(projectId, "NESMA_CALCULATION");
+            failedResult.markCalculationFailed();
+            failedResult.setRemarks("计算失败: " + e.getMessage());
+            
+            throw new RuntimeException("NESMA计算执行失败: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 计算功能点总分值
+     * 对所有功能点进行分类计算和权重应用
+     * 
+     * @param functionPoints 功能点列表
+     * @return 功能点总分值
+     */
+    private BigDecimal calculateTotalFunctionPoints(List&lt;FunctionPoint&gt; functionPoints) {
+        logger.debug("开始计算功能点总分值，功能点数量: {}", functionPoints.size());
+        
+        BigDecimal totalPoints = BigDecimal.ZERO;
+        Map&lt;String, Integer&gt; typeCounter = new HashMap&lt;&gt;();
+        
+        for (FunctionPoint fp : functionPoints) {
+            // 验证功能点数据完整性
+            validateFunctionPoint(fp);
+            
+            // 确定复杂度等级
+            String complexityLevel = determineComplexityLevel(fp);
+            fp.setComplexityLevel(complexityLevel);
+            
+            // 获取权重并计算功能点值
+            BigDecimal weight = getStandardWeight(fp.getFunctionPointType(), complexityLevel);
+            fp.setComplexityWeight(weight);
+            fp.setFunctionPointValue(weight);
+            
+            // 累加到总分
+            totalPoints = totalPoints.add(weight);
+            
+            // 统计各类型数量
+            typeCounter.merge(fp.getFunctionPointType(), 1, Integer::sum);
+            
+            logger.debug("功能点计算: {} - {} - {} - 权重: {}", 
+                        fp.getFunctionPointCode(), fp.getFunctionPointType(), 
+                        complexityLevel, weight);
+        }
+        
+        logger.info("功能点分类统计: {}", typeCounter);
+        logger.info("功能点总分值计算完成: {}", totalPoints);
+        
+        return totalPoints.setScale(DECIMAL_SCALE, ROUNDING_MODE);
+    }
+    
+    /**
+     * 确定功能点复杂度等级
+     * 基于DET、RET、FTR数量按照NESMA标准判定复杂度
+     * 
+     * @param functionPoint 功能点对象
+     * @return 复杂度等级 (LOW/MEDIUM/HIGH)
+     */
+    private String determineComplexityLevel(FunctionPoint functionPoint) {
+        String type = functionPoint.getFunctionPointType();
+        Integer det = functionPoint.getDetCount();
+        Integer ret = functionPoint.getRetCount();
+        Integer ftr = functionPoint.getFtrCount();
+        
+        // 确保参数不为null，设置默认值
+        det = (det != null) ? det : 1;
+        ret = (ret != null) ? ret : 1;
+        ftr = (ftr != null) ? ftr : 1;
+        
+        switch (type) {
+            case "ILF": // 内部逻辑文件
+                return determineIlfComplexity(det, ret);
+            case "EIF": // 外部接口文件  
+                return determineEifComplexity(det, ret);
+            case "EI":  // 外部输入
+                return determineEiComplexity(det, ftr);
+            case "EO":  // 外部输出
+                return determineEoComplexity(det, ftr);
+            case "EQ":  // 外部查询
+                return determineEqComplexity(det, ftr);
+            default:
+                logger.warn("未知功能点类型: {}, 默认设置为MEDIUM复杂度", type);
+                return "MEDIUM";
+        }
+    }
+    
+    /**
+     * ILF复杂度判定规则
+     * 基于DET和RET数量判定
+     */
+    private String determineIlfComplexity(int det, int ret) {
+        if (ret <= 1) {
+            if (det <= 19) return "LOW";
+            else if (det <= 50) return "MEDIUM";
+            else return "HIGH";
+        } else if (ret <= 5) {
+            if (det <= 19) return "MEDIUM";
+            else return "HIGH";
+        } else {
+            return "HIGH";
+        }
+    }
+    
+    /**
+     * EIF复杂度判定规则  
+     * 基于DET和RET数量判定
+     */
+    private String determineEifComplexity(int det, int ret) {
+        // EIF复杂度判定规则与ILF相同
+        return determineIlfComplexity(det, ret);
+    }
+    
+    /**
+     * EI复杂度判定规则
+     * 基于DET和FTR数量判定  
+     */
+    private String determineEiComplexity(int det, int ftr) {
+        if (ftr <= 1) {
+            if (det <= 4) return "LOW";
+            else if (det <= 15) return "MEDIUM";
+            else return "HIGH";
+        } else if (ftr <= 2) {
+            if (det <= 4) return "MEDIUM";
+            else return "HIGH";
+        } else {
+            return "HIGH";
+        }
+    }
+    
+    /**
+     * EO复杂度判定规则
+     * 基于DET和FTR数量判定
+     */
+    private String determineEoComplexity(int det, int ftr) {
+        if (ftr <= 1) {
+            if (det <= 5) return "LOW";
+            else if (det <= 19) return "MEDIUM";
+            else return "HIGH";
+        } else if (ftr <= 2) {
+            if (det <= 5) return "MEDIUM";
+            else return "HIGH";
+        } else {
+            return "HIGH";
+        }
+    }
+    
+    /**
+     * EQ复杂度判定规则
+     * 基于DET和FTR数量判定
+     */
+    private String determineEqComplexity(int det, int ftr) {
+        // EQ复杂度判定规则与EI相同
+        return determineEiComplexity(det, ftr);
+    }
+    
+    /**
+     * 获取NESMA标准权重值
+     * 
+     * @param functionPointType 功能点类型
+     * @param complexityLevel 复杂度等级
+     * @return 标准权重值
+     */
+    private BigDecimal getStandardWeight(String functionPointType, String complexityLevel) {
+        Map&lt;String, BigDecimal&gt; typeWeights = NESMA_WEIGHT_MATRIX.get(functionPointType);
+        if (typeWeights == null) {
+            logger.error("不支持的功能点类型: {}", functionPointType);
+            throw new IllegalArgumentException("不支持的功能点类型: " + functionPointType);
+        }
+        
+        BigDecimal weight = typeWeights.get(complexityLevel);
+        if (weight == null) {
+            logger.error("不支持的复杂度等级: {}", complexityLevel);
+            throw new IllegalArgumentException("不支持的复杂度等级: " + complexityLevel);
+        }
+        
+        return weight;
+    }
+    
+    /**
+     * 应用VAF调整因子
+     * 根据项目的NESMA配置应用价值调整因子
+     * 
+     * @param project 项目对象
+     * @param totalFunctionPoints 原始功能点总数
+     * @return 调整后功能点数
+     */
+    private BigDecimal applyVafAdjustment(Project project, BigDecimal totalFunctionPoints) {
+        // 获取项目的NESMA配置
+        NesmaConfiguration config = project.getNesmaConfiguration();
+        
+        if (config == null || !config.getUseVaf()) {
+            logger.info("项目未配置VAF或未启用VAF调整，使用原始功能点数: {}", totalFunctionPoints);
+            return totalFunctionPoints;
+        }
+        
+        // 计算VAF值
+        BigDecimal vafValue = config.calculateVaf();
+        BigDecimal finalAdjustmentFactor = config.getFinalAdjustmentFactor();
+        
+        BigDecimal adjustedPoints = totalFunctionPoints.multiply(finalAdjustmentFactor)
+                                                      .setScale(DECIMAL_SCALE, ROUNDING_MODE);
+        
+        logger.info("应用VAF调整: 原始功能点={}, VAF值={}, 最终调整因子={}, 调整后功能点={}", 
+                   totalFunctionPoints, vafValue, finalAdjustmentFactor, adjustedPoints);
+        
+        return adjustedPoints;
+    }
+    
+    /**
+     * 计算预估人月数
+     * 基于行业标准的功能点到人月转换比率
+     * 
+     * @param adjustedFunctionPoints 调整后功能点数
+     * @return 预估人月数
+     */
+    private BigDecimal calculatePersonMonths(BigDecimal adjustedFunctionPoints) {
+        // 政府项目标准转换比率：每100功能点约需6-8人月，这里使用7人月
+        BigDecimal conversionRate = new BigDecimal("0.07"); // 7人月/100FP = 0.07人月/FP
+        
+        BigDecimal personMonths = adjustedFunctionPoints.multiply(conversionRate)
+                                                       .setScale(DECIMAL_SCALE, ROUNDING_MODE);
+        
+        logger.debug("人月数计算: 调整后功能点={}, 转换比率={}, 预估人月={}", 
+                    adjustedFunctionPoints, conversionRate, personMonths);
+        
+        return personMonths;
+    }
+    
+    /**
+     * 计算预估成本  
+     * 基于人月数和标准人月单价计算项目成本
+     * 
+     * @param personMonths 预估人月数
+     * @return 预估总成本
+     */
+    private BigDecimal calculateEstimatedCost(BigDecimal personMonths) {
+        // 政府项目标准人月单价（可配置）：15000元/人月
+        BigDecimal monthlyRate = new BigDecimal("15000.0000");
+        
+        BigDecimal totalCost = personMonths.multiply(monthlyRate)
+                                          .setScale(DECIMAL_SCALE, ROUNDING_MODE);
+        
+        logger.debug("成本计算: 人月数={}, 人月单价={}, 预估总成本={}", 
+                    personMonths, monthlyRate, totalCost);
+        
+        return totalCost;
+    }
+    
+    /**
+     * 验证项目存在性并获取项目信息
+     * 
+     * @param projectId 项目ID
+     * @return Project 项目对象
+     * @throws IllegalArgumentException 当项目不存在时抛出
+     */
+    private Project validateAndGetProject(Long projectId) {
+        if (projectId == null) {
+            throw new IllegalArgumentException("项目ID不能为空");
+        }
+        
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -&gt; new IllegalArgumentException("项目不存在，项目ID: " + projectId));
+        
+        logger.debug("项目验证通过: {}", project.getProjectName());
+        return project;
+    }
+    
+    /**
+     * 验证功能点数据完整性
+     * 
+     * @param functionPoint 功能点对象
+     * @throws IllegalArgumentException 当功能点数据无效时抛出
+     */
+    private void validateFunctionPoint(FunctionPoint functionPoint) {
+        if (functionPoint == null) {
+            throw new IllegalArgumentException("功能点对象不能为空");
+        }
+        
+        if (functionPoint.getFunctionPointType() == null || functionPoint.getFunctionPointType().trim().isEmpty()) {
+            throw new IllegalArgumentException("功能点类型不能为空，功能点ID: " + functionPoint.getId());
+        }
+        
+        String type = functionPoint.getFunctionPointType();
+        if (!NESMA_WEIGHT_MATRIX.containsKey(type)) {
+            throw new IllegalArgumentException("不支持的功能点类型: " + type);
+        }
+        
+        // 验证状态
+        if (!"CONFIRMED".equals(functionPoint.getStatus()) && !"VALIDATED".equals(functionPoint.getStatus())) {
+            logger.warn("功能点状态未确认，建议先确认功能点数据，功能点ID: {}, 状态: {}", 
+                       functionPoint.getId(), functionPoint.getStatus());
+        }
+    }
+    
+    /**
+     * 获取功能点类型的中文描述
+     * 
+     * @param type 功能点类型英文代码
+     * @return 中文描述
+     */
+    public String getFunctionPointTypeDescription(String type) {
+        switch (type) {
+            case "ILF": return "内部逻辑文件";
+            case "EIF": return "外部接口文件";
+            case "EI": return "外部输入";
+            case "EO": return "外部输出";
+            case "EQ": return "外部查询";
+            default: return "未知类型";
+        }
+    }
+    
+    /**
+     * 获取复杂度等级的中文描述
+     * 
+     * @param level 复杂度等级英文代码
+     * @return 中文描述
+     */
+    public String getComplexityLevelDescription(String level) {
+        switch (level) {
+            case "LOW": return "低";
+            case "MEDIUM": return "中";
+            case "HIGH": return "高";
+            default: return "未知";
+        }
+    }
+}
