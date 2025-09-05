@@ -40,10 +40,10 @@ export const useNesmaStore = defineStore('nesma', () => {
   
   // 计算结果
   const calculationResult = ref<CalculationResult | null>(null)
-  const calculationHistory = ref<any[]>([])
+  const calculationHistory = ref<CalculationResult[]>([])
   
   // 配置数据
-  const nesmaConfig = ref<any>(null)
+  const nesmaConfig = ref<Record<string, unknown> | null>(null)
 
   // 计算属性
   const totalUnadjustedPoints = computed(() => {
@@ -313,7 +313,7 @@ export const useNesmaStore = defineStore('nesma', () => {
   }
 
   // 数据管理
-  const addFunctionPointElement = (type: keyof FunctionPointData, element: any) => {
+  const addFunctionPointElement = (type: keyof FunctionPointData, element: Omit<import('../utils/nesmaApi').FunctionPointElement, 'points'>) => {
     functionPointData.value[type].push(element)
   }
 
@@ -321,7 +321,7 @@ export const useNesmaStore = defineStore('nesma', () => {
     functionPointData.value[type].splice(index, 1)
   }
 
-  const updateFunctionPointElement = (type: keyof FunctionPointData, index: number, element: any) => {
+  const updateFunctionPointElement = (type: keyof FunctionPointData, index: number, element: import('../utils/nesmaApi').FunctionPointElement) => {
     functionPointData.value[type][index] = element
   }
 

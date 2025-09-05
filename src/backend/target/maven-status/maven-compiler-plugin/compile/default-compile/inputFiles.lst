@@ -8,11 +8,15 @@
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/dto/request/CreateProjectRequest.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/entity/VafFactor.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/dto/ApiResponse.java
+/Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/entity/SimpleProject.java
+/Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/repository/SimpleProjectRepository.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/entity/Permission.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/config/WebConfig.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/entity/ProjectTeamMember.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/entity/Project.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/entity/ProjectStatus.java
+/Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/config/SecurityConfig.java
+/Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/controller/ProjectController.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/repository/VafFactorRepository.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/entity/EqDetail.java
 /Users/chengpeng/traeWorkspace/manday-assess/src/backend/src/main/java/gov/changsha/finance/entity/CalculationResult.java

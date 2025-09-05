@@ -1,5 +1,5 @@
 <template>
-  <div class="nesma-calculate-container">
+  <div class="nesma-calculate-container page-container page-container--application page-container--professional">
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-left">
@@ -214,32 +214,158 @@
             </div>
           </div>
 
+          <!-- EO - 外部输出 -->
+          <div class="element-section">
+            <h3>EO - 外部输出 (External Outputs)</h3>
+            <p class="element-desc">向应用程序外部发送数据的基本流程，包含派生数据或计算结果</p>
+            
+            <el-table :data="functionPointData.eo" style="width: 100%" class="element-table">
+              <el-table-column prop="name" label="输出名称" min-width="200">
+                <template #default="{ row, $index }">
+                  <el-input v-model="row.name" placeholder="请输入输出名称" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="description" label="描述" min-width="250">
+                <template #default="{ row, $index }">
+                  <el-input v-model="row.description" placeholder="请输入输出描述" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="det" label="DET数" width="100" align="center">
+                <template #default="{ row, $index }">
+                  <el-input-number v-model="row.det" :min="1" :max="100" size="small" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="ftr" label="FTR数" width="100" align="center">
+                <template #default="{ row, $index }">
+                  <el-input-number v-model="row.ftr" :min="1" :max="50" size="small" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="complexity" label="复杂度" width="100" align="center">
+                <template #default="{ row }">
+                  <el-tag :type="getComplexityType(row.complexity)">
+                    {{ row.complexity }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="points" label="功能点" width="100" align="center">
+                <template #default="{ row }">
+                  <span class="points-value">{{ row.points }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100" align="center">
+                <template #default="{ row, $index }">
+                  <el-button size="small" text type="danger" @click="removeEo($index)">
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="table-actions">
+              <el-button size="small" @click="addEo">
+                <el-icon><Plus /></el-icon>
+                添加EO
+              </el-button>
+              <div class="total-info">
+                EO总计: <strong>{{ eoTotal }} 个输出，{{ eoPoints }} 功能点</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- EQ - 外部查询 -->
+          <div class="element-section">
+            <h3>EQ - 外部查询 (External Inquiries)</h3>
+            <p class="element-desc">将数据从应用程序发送到应用程序外部的基本流程，无派生数据</p>
+            
+            <el-table :data="functionPointData.eq" style="width: 100%" class="element-table">
+              <el-table-column prop="name" label="查询名称" min-width="200">
+                <template #default="{ row, $index }">
+                  <el-input v-model="row.name" placeholder="请输入查询名称" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="description" label="描述" min-width="250">
+                <template #default="{ row, $index }">
+                  <el-input v-model="row.description" placeholder="请输入查询描述" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="det" label="DET数" width="100" align="center">
+                <template #default="{ row, $index }">
+                  <el-input-number v-model="row.det" :min="1" :max="100" size="small" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="ftr" label="FTR数" width="100" align="center">
+                <template #default="{ row, $index }">
+                  <el-input-number v-model="row.ftr" :min="1" :max="50" size="small" />
+                </template>
+              </el-table-column>
+              <el-table-column prop="complexity" label="复杂度" width="100" align="center">
+                <template #default="{ row }">
+                  <el-tag :type="getComplexityType(row.complexity)">
+                    {{ row.complexity }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="points" label="功能点" width="100" align="center">
+                <template #default="{ row }">
+                  <span class="points-value">{{ row.points }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100" align="center">
+                <template #default="{ row, $index }">
+                  <el-button size="small" text type="danger" @click="removeEq($index)">
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div class="table-actions">
+              <el-button size="small" @click="addEq">
+                <el-icon><Plus /></el-icon>
+                添加EQ
+              </el-button>
+              <div class="total-info">
+                EQ总计: <strong>{{ eqTotal }} 个查询，{{ eqPoints }} 功能点</strong>
+              </div>
+            </div>
+          </div>
+
           <!-- 功能点汇总 -->
           <div class="summary-section">
             <el-card class="summary-card">
               <template #header>
                 <span>功能点汇总</span>
               </template>
-              <el-row :gutter="20">
-                <el-col :span="6">
+              <el-row :gutter="16">
+                <el-col :span="4">
                   <div class="summary-item">
                     <div class="item-label">ILF</div>
                     <div class="item-value">{{ ilfPoints }}</div>
                   </div>
                 </el-col>
-                <el-col :span="6">
+                <el-col :span="4">
                   <div class="summary-item">
                     <div class="item-label">EIF</div>
                     <div class="item-value">{{ eifPoints }}</div>
                   </div>
                 </el-col>
-                <el-col :span="6">
+                <el-col :span="4">
                   <div class="summary-item">
                     <div class="item-label">EI</div>
                     <div class="item-value">{{ eiPoints }}</div>
                   </div>
                 </el-col>
-                <el-col :span="6">
+                <el-col :span="4">
+                  <div class="summary-item">
+                    <div class="item-label">EO</div>
+                    <div class="item-value">{{ eoPoints }}</div>
+                  </div>
+                </el-col>
+                <el-col :span="4">
+                  <div class="summary-item">
+                    <div class="item-label">EQ</div>
+                    <div class="item-value">{{ eqPoints }}</div>
+                  </div>
+                </el-col>
+                <el-col :span="4">
                   <div class="summary-item">
                     <div class="item-label">总计</div>
                     <div class="item-value total">{{ totalUnadjustedPoints }}</div>
@@ -706,7 +832,15 @@ const eifPoints = computed(() => functionPointData.eif.reduce((sum, item) => sum
 const eiTotal = computed(() => functionPointData.ei.length)
 const eiPoints = computed(() => functionPointData.ei.reduce((sum, item) => sum + item.points, 0))
 
-const totalUnadjustedPoints = computed(() => ilfPoints.value + eifPoints.value + eiPoints.value)
+const eoTotal = computed(() => functionPointData.eo.length)
+const eoPoints = computed(() => functionPointData.eo.reduce((sum, item) => sum + item.points, 0))
+
+const eqTotal = computed(() => functionPointData.eq.length)
+const eqPoints = computed(() => functionPointData.eq.reduce((sum, item) => sum + item.points, 0))
+
+const totalUnadjustedPoints = computed(() => 
+  ilfPoints.value + eifPoints.value + eiPoints.value + eoPoints.value + eqPoints.value
+)
 
 const vafTotalScore = computed(() => Object.values(vafData).reduce((sum, score) => sum + score, 0))
 const vafAdjustmentFactor = computed(() => Number((0.65 + 0.01 * vafTotalScore.value).toFixed(4)))
@@ -803,6 +937,46 @@ const calculateComplexityAndPoints = () => {
       }
     }
   })
+
+  // EO复杂度计算
+  functionPointData.eo.forEach(item => {
+    if (item.det && item.ftr) {
+      if ((item.ftr === 1 && item.det <= 19) || (item.ftr >= 2 && item.ftr <= 3 && item.det <= 20)) {
+        item.complexity = '低'
+        item.points = 4
+      } else if (
+        (item.ftr === 1 && item.det >= 20) ||
+        (item.ftr >= 2 && item.ftr <= 3 && item.det >= 21 && item.det <= 50) ||
+        (item.ftr >= 4 && item.det <= 25)
+      ) {
+        item.complexity = '中'
+        item.points = 5
+      } else {
+        item.complexity = '高'
+        item.points = 7
+      }
+    }
+  })
+
+  // EQ复杂度计算
+  functionPointData.eq.forEach(item => {
+    if (item.det && item.ftr) {
+      if ((item.ftr === 1 && item.det <= 19) || (item.ftr >= 2 && item.ftr <= 3 && item.det <= 20)) {
+        item.complexity = '低'
+        item.points = 3
+      } else if (
+        (item.ftr === 1 && item.det >= 20) ||
+        (item.ftr >= 2 && item.ftr <= 3 && item.det >= 21 && item.det <= 50) ||
+        (item.ftr >= 4 && item.det <= 25)
+      ) {
+        item.complexity = '中'
+        item.points = 4
+      } else {
+        item.complexity = '高'
+        item.points = 6
+      }
+    }
+  })
 }
 
 const getComplexityType = (complexity: string) => {
@@ -862,6 +1036,36 @@ const addEi = () => {
 
 const removeEi = (index: number) => {
   functionPointData.ei.splice(index, 1)
+}
+
+const addEo = () => {
+  functionPointData.eo.push({
+    name: '',
+    description: '',
+    det: 1,
+    ftr: 1,
+    complexity: '低',
+    points: 4,
+  })
+}
+
+const removeEo = (index: number) => {
+  functionPointData.eo.splice(index, 1)
+}
+
+const addEq = () => {
+  functionPointData.eq.push({
+    name: '',
+    description: '',
+    det: 1,
+    ftr: 1,
+    complexity: '低',
+    points: 3,
+  })
+}
+
+const removeEq = (index: number) => {
+  functionPointData.eq.splice(index, 1)
 }
 
 const selectReuseLevel = (level: string) => {
@@ -931,7 +1135,7 @@ const handleGoBack = () => {
 
 <style scoped>
 .nesma-calculate-container {
-  padding: 20px;
+  /* 使用新的响应式布局系统，移除固定宽度 */
   min-height: 100vh;
   background: #f5f7fa;
 }
@@ -1269,5 +1473,18 @@ const handleGoBack = () => {
 
 :deep(.el-input-number) {
   width: 100%;
+}
+
+:deep(.el-table) {
+  max-width: 100% !important;
+}
+
+:deep(.el-table .el-table__body-wrapper) {
+  overflow-x: auto;
+}
+
+.element-table {
+  max-width: 100%;
+  overflow-x: auto;
 }
 </style>

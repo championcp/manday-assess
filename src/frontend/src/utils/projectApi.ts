@@ -33,8 +33,8 @@ export interface Project {
   createTime: string
   updateTime: string
   updatedBy?: string
-  calculationResult?: any
-  costEstimation?: any
+  calculationResult?: Record<string, unknown>
+  costEstimation?: Record<string, unknown>
 }
 
 export interface CreateProjectRequest {
@@ -60,7 +60,9 @@ export interface CreateProjectRequest {
   remarks: string
 }
 
-export interface UpdateProjectRequest extends CreateProjectRequest {}
+export interface UpdateProjectRequest extends CreateProjectRequest {
+  id: number
+}
 
 class ProjectApiService {
   /**
@@ -126,7 +128,7 @@ class ProjectApiService {
   /**
    * 获取项目状态统计
    */
-  async getProjectStats(): Promise<any> {
+  async getProjectStats(): Promise<Record<string, unknown>> {
     return api.get('/api/projects/stats')
   }
 

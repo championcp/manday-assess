@@ -97,7 +97,7 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
 
-  const createProject = async (data: any) => {
+  const createProject = async (data: import('../utils/projectApi').CreateProjectRequest) => {
     loading.value = true
     try {
       const project = await projectApi.createProject(data)
@@ -112,7 +112,7 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
 
-  const updateProject = async (id: number, data: any) => {
+  const updateProject = async (id: number, data: import('../utils/projectApi').UpdateProjectRequest) => {
     loading.value = true
     try {
       const project = await projectApi.updateProject(id, data)

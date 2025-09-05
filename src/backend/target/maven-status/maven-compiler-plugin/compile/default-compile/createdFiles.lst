@@ -17,7 +17,9 @@ gov/changsha/finance/service/exception/NesmaCalculationException$ErrorType.class
 gov/changsha/finance/entity/Role$RoleType.class
 gov/changsha/finance/dto/ApiResponse.class
 gov/changsha/finance/controller/HelloController.class
+gov/changsha/finance/controller/ProjectController.class
 gov/changsha/finance/service/exception/NesmaCalculationException.class
+gov/changsha/finance/entity/SimpleProject.class
 gov/changsha/finance/service/VafCalculationService.class
 gov/changsha/finance/entity/NesmaConfiguration$CalculationMethod.class
 gov/changsha/finance/entity/FunctionPointHistory.class
@@ -27,6 +29,7 @@ gov/changsha/finance/entity/Permission$PermissionType.class
 gov/changsha/finance/entity/EqDetail.class
 gov/changsha/finance/entity/NesmaConfiguration.class
 gov/changsha/finance/entity/EoDetail.class
+gov/changsha/finance/config/SecurityConfig.class
 gov/changsha/finance/entity/EiDetail.class
 gov/changsha/finance/dto/response/ProjectResponse$CalculationResultSummary.class
 gov/changsha/finance/entity/Role$RoleStatus.class
@@ -40,6 +43,7 @@ gov/changsha/finance/service/ReuseAdjustmentService.class
 gov/changsha/finance/entity/FunctionPointElement.class
 gov/changsha/finance/entity/NesmaConfiguration$PlatformType.class
 gov/changsha/finance/entity/NesmaConfiguration$ApplicationType.class
+gov/changsha/finance/repository/SimpleProjectRepository.class
 gov/changsha/finance/dto/response/ProjectResponse.class
 gov/changsha/finance/repository/VafFactorRepository.class
 gov/changsha/finance/entity/ProjectStatusHistory.class

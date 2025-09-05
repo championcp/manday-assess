@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="gov.changsha.finance.service.VafCalculationServiceTest" time="0.073" tests="9" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="gov.changsha.finance.service.VafCalculationServiceTest" time="0.032" tests="9" errors="0" skipped="0" failures="0">
   <properties>
     <property name="gopherProxySet" value="false"/>
     <property name="awt.toolkit" value="sun.lwawt.macosx.LWCToolkit"/>
@@ -15,12 +15,12 @@
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.vendor.url" value="http://java.oracle.com/"/>
     <property name="user.timezone" value="Asia/Shanghai"/>
-    <property name="java.vm.specification.version" value="1.8"/>
     <property name="os.name" value="Mac OS X"/>
-    <property name="user.country" value="CN"/>
+    <property name="java.vm.specification.version" value="1.8"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="CN"/>
     <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib"/>
-    <property name="sun.java.command" value="/Users/chengpeng/traeWorkspace/manday-assess/src/backend/target/surefire/surefirebooter-20250904173939589_3.jar /Users/chengpeng/traeWorkspace/manday-assess/src/backend/target/surefire 2025-09-04T17-39-39_096-jvmRun1 surefire-20250904173939589_1tmp surefire_0-20250904173939589_2tmp"/>
+    <property name="sun.java.command" value="/Users/chengpeng/traeWorkspace/manday-assess/src/backend/target/surefire/surefirebooter-20250905191712066_3.jar /Users/chengpeng/traeWorkspace/manday-assess/src/backend/target/surefire 2025-09-05T19-17-11_533-jvmRun1 surefire-20250905191712066_1tmp surefire_0-20250905191712066_2tmp"/>
     <property name="http.nonProxyHosts" value="127.0.0.1|192.168.0.0/16|*.192.168.0.0/16|10.0.0.0/8|*.10.0.0.0/8|172.16.0.0/12|*.172.16.0.0/12|172.29.0.0/16|*.172.29.0.0/16|localhost|*.localhost|local|*.local|crashlytics.com|*.crashlytics.com|&lt;local&gt;|*.&lt;local&gt;"/>
     <property name="surefire.test.class.path" value="/Users/chengpeng/traeWorkspace/manday-assess/src/backend/target/test-classes:/Users/chengpeng/traeWorkspace/manday-assess/src/backend/target/classes:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-web/2.7.18/spring-boot-starter-web-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter/2.7.18/spring-boot-starter-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-logging/2.7.18/spring-boot-starter-logging-2.7.18.jar:/Users/chengpeng/.m2/repository/ch/qos/logback/logback-classic/1.2.12/logback-classic-1.2.12.jar:/Users/chengpeng/.m2/repository/ch/qos/logback/logback-core/1.2.12/logback-core-1.2.12.jar:/Users/chengpeng/.m2/repository/org/apache/logging/log4j/log4j-to-slf4j/2.17.2/log4j-to-slf4j-2.17.2.jar:/Users/chengpeng/.m2/repository/org/apache/logging/log4j/log4j-api/2.17.2/log4j-api-2.17.2.jar:/Users/chengpeng/.m2/repository/org/slf4j/jul-to-slf4j/1.7.36/jul-to-slf4j-1.7.36.jar:/Users/chengpeng/.m2/repository/jakarta/annotation/jakarta.annotation-api/1.3.5/jakarta.annotation-api-1.3.5.jar:/Users/chengpeng/.m2/repository/org/yaml/snakeyaml/1.30/snakeyaml-1.30.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-json/2.7.18/spring-boot-starter-json-2.7.18.jar:/Users/chengpeng/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.13.5/jackson-datatype-jdk8-2.13.5.jar:/Users/chengpeng/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.13.5/jackson-datatype-jsr310-2.13.5.jar:/Users/chengpeng/.m2/repository/com/fasterxml/jackson/module/jackson-module-parameter-names/2.13.5/jackson-module-parameter-names-2.13.5.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-tomcat/2.7.18/spring-boot-starter-tomcat-2.7.18.jar:/Users/chengpeng/.m2/repository/org/apache/tomcat/embed/tomcat-embed-core/9.0.83/tomcat-embed-core-9.0.83.jar:/Users/chengpeng/.m2/repository/org/apache/tomcat/embed/tomcat-embed-websocket/9.0.83/tomcat-embed-websocket-9.0.83.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-web/5.3.31/spring-web-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-beans/5.3.31/spring-beans-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-webmvc/5.3.31/spring-webmvc-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-context/5.3.31/spring-context-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-expression/5.3.31/spring-expression-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-data-jpa/2.7.18/spring-boot-starter-data-jpa-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-aop/2.7.18/spring-boot-starter-aop-2.7.18.jar:/Users/chengpeng/.m2/repository/org/aspectj/aspectjweaver/1.9.7/aspectjweaver-1.9.7.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-jdbc/2.7.18/spring-boot-starter-jdbc-2.7.18.jar:/Users/chengpeng/.m2/repository/com/zaxxer/HikariCP/4.0.3/HikariCP-4.0.3.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-jdbc/5.3.31/spring-jdbc-5.3.31.jar:/Users/chengpeng/.m2/repository/jakarta/transaction/jakarta.transaction-api/1.3.3/jakarta.transaction-api-1.3.3.jar:/Users/chengpeng/.m2/repository/jakarta/persistence/jakarta.persistence-api/2.2.3/jakarta.persistence-api-2.2.3.jar:/Users/chengpeng/.m2/repository/org/hibernate/hibernate-core/5.6.15.Final/hibernate-core-5.6.15.Final.jar:/Users/chengpeng/.m2/repository/org/jboss/logging/jboss-logging/3.4.3.Final/jboss-logging-3.4.3.Final.jar:/Users/chengpeng/.m2/repository/net/bytebuddy/byte-buddy/1.12.23/byte-buddy-1.12.23.jar:/Users/chengpeng/.m2/repository/antlr/antlr/2.7.7/antlr-2.7.7.jar:/Users/chengpeng/.m2/repository/org/jboss/jandex/2.4.2.Final/jandex-2.4.2.Final.jar:/Users/chengpeng/.m2/repository/com/fasterxml/classmate/1.5.1/classmate-1.5.1.jar:/Users/chengpeng/.m2/repository/org/hibernate/common/hibernate-commons-annotations/5.1.2.Final/hibernate-commons-annotations-5.1.2.Final.jar:/Users/chengpeng/.m2/repository/org/glassfish/jaxb/jaxb-runtime/2.3.9/jaxb-runtime-2.3.9.jar:/Users/chengpeng/.m2/repository/org/glassfish/jaxb/txw2/2.3.9/txw2-2.3.9.jar:/Users/chengpeng/.m2/repository/com/sun/istack/istack-commons-runtime/3.0.12/istack-commons-runtime-3.0.12.jar:/Users/chengpeng/.m2/repository/com/sun/activation/jakarta.activation/1.2.2/jakarta.activation-1.2.2.jar:/Users/chengpeng/.m2/repository/org/springframework/data/spring-data-jpa/2.7.18/spring-data-jpa-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/data/spring-data-commons/2.7.18/spring-data-commons-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-orm/5.3.31/spring-orm-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-tx/5.3.31/spring-tx-5.3.31.jar:/Users/chengpeng/.m2/repository/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-aspects/5.3.31/spring-aspects-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-validation/2.7.18/spring-boot-starter-validation-2.7.18.jar:/Users/chengpeng/.m2/repository/org/apache/tomcat/embed/tomcat-embed-el/9.0.83/tomcat-embed-el-9.0.83.jar:/Users/chengpeng/.m2/repository/org/hibernate/validator/hibernate-validator/6.2.5.Final/hibernate-validator-6.2.5.Final.jar:/Users/chengpeng/.m2/repository/jakarta/validation/jakarta.validation-api/2.0.2/jakarta.validation-api-2.0.2.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-security/2.7.18/spring-boot-starter-security-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-aop/5.3.31/spring-aop-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/security/spring-security-config/5.7.11/spring-security-config-5.7.11.jar:/Users/chengpeng/.m2/repository/org/springframework/security/spring-security-web/5.7.11/spring-security-web-5.7.11.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-data-redis/2.7.18/spring-boot-starter-data-redis-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/data/spring-data-redis/2.7.18/spring-data-redis-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/data/spring-data-keyvalue/2.7.18/spring-data-keyvalue-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-oxm/5.3.31/spring-oxm-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-context-support/5.3.31/spring-context-support-5.3.31.jar:/Users/chengpeng/.m2/repository/io/lettuce/lettuce-core/6.1.10.RELEASE/lettuce-core-6.1.10.RELEASE.jar:/Users/chengpeng/.m2/repository/io/netty/netty-common/4.1.101.Final/netty-common-4.1.101.Final.jar:/Users/chengpeng/.m2/repository/io/netty/netty-handler/4.1.101.Final/netty-handler-4.1.101.Final.jar:/Users/chengpeng/.m2/repository/io/netty/netty-resolver/4.1.101.Final/netty-resolver-4.1.101.Final.jar:/Users/chengpeng/.m2/repository/io/netty/netty-buffer/4.1.101.Final/netty-buffer-4.1.101.Final.jar:/Users/chengpeng/.m2/repository/io/netty/netty-transport-native-unix-common/4.1.101.Final/netty-transport-native-unix-common-4.1.101.Final.jar:/Users/chengpeng/.m2/repository/io/netty/netty-codec/4.1.101.Final/netty-codec-4.1.101.Final.jar:/Users/chengpeng/.m2/repository/io/netty/netty-transport/4.1.101.Final/netty-transport-4.1.101.Final.jar:/Users/chengpeng/.m2/repository/io/projectreactor/reactor-core/3.4.34/reactor-core-3.4.34.jar:/Users/chengpeng/.m2/repository/org/reactivestreams/reactive-streams/1.0.4/reactive-streams-1.0.4.jar:/Users/chengpeng/.m2/repository/org/postgresql/postgresql/42.3.8/postgresql-42.3.8.jar:/Users/chengpeng/.m2/repository/org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.jar:/Users/chengpeng/.m2/repository/org/flywaydb/flyway-core/8.5.13/flyway-core-8.5.13.jar:/Users/chengpeng/.m2/repository/org/mapstruct/mapstruct/1.5.5.Final/mapstruct-1.5.5.Final.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-actuator/2.7.18/spring-boot-starter-actuator-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-actuator-autoconfigure/2.7.18/spring-boot-actuator-autoconfigure-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-actuator/2.7.18/spring-boot-actuator-2.7.18.jar:/Users/chengpeng/.m2/repository/io/micrometer/micrometer-core/1.9.17/micrometer-core-1.9.17.jar:/Users/chengpeng/.m2/repository/org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12.jar:/Users/chengpeng/.m2/repository/org/latencyutils/LatencyUtils/2.0.3/LatencyUtils-2.0.3.jar:/Users/chengpeng/.m2/repository/org/springdoc/springdoc-openapi-ui/1.7.0/springdoc-openapi-ui-1.7.0.jar:/Users/chengpeng/.m2/repository/org/springdoc/springdoc-openapi-webmvc-core/1.7.0/springdoc-openapi-webmvc-core-1.7.0.jar:/Users/chengpeng/.m2/repository/org/springdoc/springdoc-openapi-common/1.7.0/springdoc-openapi-common-1.7.0.jar:/Users/chengpeng/.m2/repository/io/swagger/core/v3/swagger-core/2.2.9/swagger-core-2.2.9.jar:/Users/chengpeng/.m2/repository/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar:/Users/chengpeng/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.13.5/jackson-dataformat-yaml-2.13.5.jar:/Users/chengpeng/.m2/repository/io/swagger/core/v3/swagger-annotations/2.2.9/swagger-annotations-2.2.9.jar:/Users/chengpeng/.m2/repository/io/swagger/core/v3/swagger-models/2.2.9/swagger-models-2.2.9.jar:/Users/chengpeng/.m2/repository/org/webjars/swagger-ui/4.18.2/swagger-ui-4.18.2.jar:/Users/chengpeng/.m2/repository/io/jsonwebtoken/jjwt-api/0.12.3/jjwt-api-0.12.3.jar:/Users/chengpeng/.m2/repository/io/jsonwebtoken/jjwt-impl/0.12.3/jjwt-impl-0.12.3.jar:/Users/chengpeng/.m2/repository/io/jsonwebtoken/jjwt-jackson/0.12.3/jjwt-jackson-0.12.3.jar:/Users/chengpeng/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.13.5/jackson-databind-2.13.5.jar:/Users/chengpeng/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.13.5/jackson-annotations-2.13.5.jar:/Users/chengpeng/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.13.5/jackson-core-2.13.5.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-devtools/2.7.18/spring-boot-devtools-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot/2.7.18/spring-boot-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-autoconfigure/2.7.18/spring-boot-autoconfigure-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-starter-test/2.7.18/spring-boot-starter-test-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-test/2.7.18/spring-boot-test-2.7.18.jar:/Users/chengpeng/.m2/repository/org/springframework/boot/spring-boot-test-autoconfigure/2.7.18/spring-boot-test-autoconfigure-2.7.18.jar:/Users/chengpeng/.m2/repository/com/jayway/jsonpath/json-path/2.7.0/json-path-2.7.0.jar:/Users/chengpeng/.m2/repository/net/minidev/json-smart/2.4.11/json-smart-2.4.11.jar:/Users/chengpeng/.m2/repository/net/minidev/accessors-smart/2.4.11/accessors-smart-2.4.11.jar:/Users/chengpeng/.m2/repository/org/ow2/asm/asm/9.3/asm-9.3.jar:/Users/chengpeng/.m2/repository/jakarta/xml/bind/jakarta.xml.bind-api/2.3.3/jakarta.xml.bind-api-2.3.3.jar:/Users/chengpeng/.m2/repository/jakarta/activation/jakarta.activation-api/1.2.2/jakarta.activation-api-1.2.2.jar:/Users/chengpeng/.m2/repository/org/assertj/assertj-core/3.22.0/assertj-core-3.22.0.jar:/Users/chengpeng/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/Users/chengpeng/.m2/repository/org/junit/jupiter/junit-jupiter/5.8.2/junit-jupiter-5.8.2.jar:/Users/chengpeng/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.8.2/junit-jupiter-api-5.8.2.jar:/Users/chengpeng/.m2/repository/org/opentest4j/opentest4j/1.2.0/opentest4j-1.2.0.jar:/Users/chengpeng/.m2/repository/org/junit/platform/junit-platform-commons/1.8.2/junit-platform-commons-1.8.2.jar:/Users/chengpeng/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/chengpeng/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.8.2/junit-jupiter-params-5.8.2.jar:/Users/chengpeng/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.8.2/junit-jupiter-engine-5.8.2.jar:/Users/chengpeng/.m2/repository/org/junit/platform/junit-platform-engine/1.8.2/junit-platform-engine-1.8.2.jar:/Users/chengpeng/.m2/repository/org/mockito/mockito-core/4.5.1/mockito-core-4.5.1.jar:/Users/chengpeng/.m2/repository/net/bytebuddy/byte-buddy-agent/1.12.23/byte-buddy-agent-1.12.23.jar:/Users/chengpeng/.m2/repository/org/objenesis/objenesis/3.2/objenesis-3.2.jar:/Users/chengpeng/.m2/repository/org/mockito/mockito-junit-jupiter/4.5.1/mockito-junit-jupiter-4.5.1.jar:/Users/chengpeng/.m2/repository/org/skyscreamer/jsonassert/1.5.1/jsonassert-1.5.1.jar:/Users/chengpeng/.m2/repository/com/vaadin/external/google/android-json/0.0.20131108.vaadin1/android-json-0.0.20131108.vaadin1.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-core/5.3.31/spring-core-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-jcl/5.3.31/spring-jcl-5.3.31.jar:/Users/chengpeng/.m2/repository/org/springframework/spring-test/5.3.31/spring-test-5.3.31.jar:/Users/chengpeng/.m2/repository/org/xmlunit/xmlunit-core/2.9.1/xmlunit-core-2.9.1.jar:/Users/chengpeng/.m2/repository/org/springframework/security/spring-security-test/5.7.11/spring-security-test-5.7.11.jar:/Users/chengpeng/.m2/repository/org/springframework/security/spring-security-core/5.7.11/spring-security-core-5.7.11.jar:/Users/chengpeng/.m2/repository/org/springframework/security/spring-security-crypto/5.7.11/spring-security-crypto-5.7.11.jar:/Users/chengpeng/.m2/repository/org/testcontainers/junit-jupiter/1.19.1/junit-jupiter-1.19.1.jar:/Users/chengpeng/.m2/repository/org/testcontainers/testcontainers/1.19.1/testcontainers-1.19.1.jar:/Users/chengpeng/.m2/repository/junit/junit/4.13.2/junit-4.13.2.jar:/Users/chengpeng/.m2/repository/org/hamcrest/hamcrest-core/2.2/hamcrest-core-2.2.jar:/Users/chengpeng/.m2/repository/org/apache/commons/commons-compress/1.24.0/commons-compress-1.24.0.jar:/Users/chengpeng/.m2/repository/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8.jar:/Users/chengpeng/.m2/repository/org/jetbrains/annotations/17.0.0/annotations-17.0.0.jar:/Users/chengpeng/.m2/repository/com/github/docker-java/docker-java-api/3.3.3/docker-java-api-3.3.3.jar:/Users/chengpeng/.m2/repository/com/github/docker-java/docker-java-transport-zerodep/3.3.3/docker-java-transport-zerodep-3.3.3.jar:/Users/chengpeng/.m2/repository/com/github/docker-java/docker-java-transport/3.3.3/docker-java-transport-3.3.3.jar:/Users/chengpeng/.m2/repository/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar:/Users/chengpeng/.m2/repository/org/testcontainers/postgresql/1.19.1/postgresql-1.19.1.jar:/Users/chengpeng/.m2/repository/org/testcontainers/jdbc/1.19.1/jdbc-1.19.1.jar:/Users/chengpeng/.m2/repository/org/testcontainers/database-commons/1.19.1/database-commons-1.19.1.jar:"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -28,14 +28,16 @@
     <property name="user.language" value="zh"/>
     <property name="java.specification.vendor" value="Oracle Corporation"/>
     <property name="java.home" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre"/>
-    <property name="basedir" value="/Users/chengpeng/traeWorkspace/manday-assess/src/backend"/>
     <property name="https.proxyHost" value="127.0.0.1"/>
     <property name="file.separator" value="/"/>
+    <property name="basedir" value="/Users/chengpeng/traeWorkspace/manday-assess/src/backend"/>
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="FILE_LOG_CHARSET" value="UTF-8"/>
     <property name="java.awt.graphicsenv" value="sun.awt.CGraphicsEnvironment"/>
-    <property name="surefire.real.class.path" value="/Users/chengpeng/traeWorkspace/manday-assess/src/backend/target/surefire/surefirebooter-20250904173939589_3.jar"/>
+    <property name="java.awt.headless" value="true"/>
+    <property name="surefire.real.class.path" value="/Users/chengpeng/traeWorkspace/manday-assess/src/backend/target/surefire/surefirebooter-20250905191712066_3.jar"/>
     <property name="sun.boot.class.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/sunrsasign.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/classes"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="ftp.nonProxyHosts" value="127.0.0.1|192.168.0.0/16|*.192.168.0.0/16|10.0.0.0/8|*.10.0.0.0/8|172.16.0.0/12|*.172.16.0.0/12|172.29.0.0/16|*.172.29.0.0/16|localhost|*.localhost|local|*.local|crashlytics.com|*.crashlytics.com|&lt;local&gt;|*.&lt;local&gt;"/>
@@ -45,161 +47,170 @@
     <property name="os.version" value="10.16"/>
     <property name="java.endorsed.dirs" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/endorsed"/>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"/>
     <property name="file.encoding" value="UTF-8"/>
+    <property name="jnidispatch.path" value="/Users/chengpeng/Library/Caches/JNA/temp/jna1739628475185860749.tmp"/>
+    <property name="spring.beaninfo.ignore" value="true"/>
+    <property name="jna.platform.library.path" value="/usr/lib:/usr/lib"/>
     <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
     <property name="localRepository" value="/Users/chengpeng/.m2/repository"/>
+    <property name="jna.loaded" value="true"/>
     <property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/"/>
     <property name="java.io.tmpdir" value="/var/folders/ts/nbll1h7912qd35fx5m4hvxt80000gn/T/"/>
+    <property name="com.zaxxer.hikari.pool_number" value="1"/>
     <property name="java.version" value="1.8.0_281"/>
     <property name="user.dir" value="/Users/chengpeng/traeWorkspace/manday-assess/src/backend"/>
     <property name="os.arch" value="x86_64"/>
     <property name="socksProxyPort" value="7897"/>
+    <property name="PID" value="33297"/>
     <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
     <property name="java.awt.printerjob" value="sun.lwawt.macosx.CPrinterJob"/>
     <property name="sun.os.patch.level" value="unknown"/>
+    <property name="CONSOLE_LOG_CHARSET" value="UTF-8"/>
     <property name="java.library.path" value="/Users/chengpeng/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
-    <property name="java.vm.info" value="mixed mode"/>
     <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="java.vm.info" value="mixed mode"/>
     <property name="java.vm.version" value="25.281-b09"/>
-    <property name="java.ext.dirs" value="/Users/chengpeng/Library/Java/Extensions:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/ext:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java"/>
     <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="java.ext.dirs" value="/Users/chengpeng/Library/Java/Extensions:/Library/Java/JavaVirtualMachines/jdk1.8.0_281.jdk/Contents/Home/jre/lib/ext:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java"/>
     <property name="java.class.version" value="52.0"/>
     <property name="socksNonProxyHosts" value="127.0.0.1|192.168.0.0/16|*.192.168.0.0/16|10.0.0.0/8|*.10.0.0.0/8|172.16.0.0/12|*.172.16.0.0/12|172.29.0.0/16|*.172.29.0.0/16|localhost|*.localhost|local|*.local|crashlytics.com|*.crashlytics.com|&lt;local&gt;|*.&lt;local&gt;"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"/>
     <property name="http.proxyPort" value="7897"/>
   </properties>
-  <testcase name="testStandardVafFactorDefinitions" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.006"/>
-  <testcase name="testEmptyVafFactorsHandling" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.006">
-    <system-out><![CDATA[17:39:42.132 [main] INFO gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - 项目1的VAF因子为空，初始化标准因子
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - 已初始化14个标准VAF因子
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=0, 权重=1, 贡献=0
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=0, 权重=1, 贡献=0
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=0, 权重=1, 贡献=0
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=0, 权重=1, 贡献=0
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=0, 权重=1, 贡献=0
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=0, 权重=1, 贡献=0
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=0, 权重=1, 贡献=0
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=0, 权重=1, 贡献=0
-17:39:42.132 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=0, 权重=1, 贡献=0
-17:39:42.134 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=0, 权重=1, 贡献=0
-17:39:42.135 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=0, 权重=1, 贡献=0
-17:39:42.135 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=0, 权重=1, 贡献=0
-17:39:42.135 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=0, 权重=1, 贡献=0
-17:39:42.135 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=0, 权重=1, 贡献=0
-17:39:42.135 [main] INFO gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 0, VAF值: 0.65
+  <testcase name="testStandardVafFactorDefinitions" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.001"/>
+  <testcase name="testEmptyVafFactorsHandling" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.001">
+    <system-out><![CDATA[2025-09-05 19:18:07.718 [main] INFO  gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
+2025-09-05 19:18:07.718 [main] DEBUG gov.changsha.finance.service.VafCalculationService - 项目1的VAF因子为空，初始化标准因子
+2025-09-05 19:18:07.718 [main] DEBUG gov.changsha.finance.service.VafCalculationService - 已初始化14个标准VAF因子
+2025-09-05 19:18:07.718 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.719 [main] INFO  gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 0, VAF值: 0.65
 ]]></system-out>
   </testcase>
-  <testcase name="testVafRangeBoundaryValidation" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.011">
-    <system-out><![CDATA[17:39:42.142 [main] INFO gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
-17:39:42.143 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=0, 权重=1, 贡献=0
-17:39:42.143 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=0, 权重=1, 贡献=0
-17:39:42.144 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=0, 权重=1, 贡献=0
-17:39:42.144 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=0, 权重=1, 贡献=0
-17:39:42.144 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=0, 权重=1, 贡献=0
-17:39:42.144 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=0, 权重=1, 贡献=0
-17:39:42.144 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=0, 权重=1, 贡献=0
-17:39:42.144 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=0, 权重=1, 贡献=0
-17:39:42.144 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=0, 权重=1, 贡献=0
-17:39:42.145 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=0, 权重=1, 贡献=0
-17:39:42.145 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=0, 权重=1, 贡献=0
-17:39:42.146 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=0, 权重=1, 贡献=0
-17:39:42.146 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=0, 权重=1, 贡献=0
-17:39:42.146 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=0, 权重=1, 贡献=0
-17:39:42.147 [main] INFO gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 0, VAF值: 0.65
-17:39:42.147 [main] INFO gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
-17:39:42.147 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=5, 权重=1, 贡献=5
-17:39:42.147 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=5, 权重=1, 贡献=5
-17:39:42.147 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=5, 权重=1, 贡献=5
-17:39:42.147 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=5, 权重=1, 贡献=5
-17:39:42.147 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=5, 权重=1, 贡献=5
-17:39:42.147 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=5, 权重=1, 贡献=5
-17:39:42.147 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=5, 权重=1, 贡献=5
-17:39:42.148 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=5, 权重=1, 贡献=5
-17:39:42.148 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=5, 权重=1, 贡献=5
-17:39:42.148 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=5, 权重=1, 贡献=5
-17:39:42.148 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=5, 权重=1, 贡献=5
-17:39:42.148 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=5, 权重=1, 贡献=5
-17:39:42.148 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=5, 权重=1, 贡献=5
-17:39:42.149 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=5, 权重=1, 贡献=5
-17:39:42.149 [main] INFO gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 70, VAF值: 1.35
+  <testcase name="testVafRangeBoundaryValidation" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.006">
+    <system-out><![CDATA[2025-09-05 19:18:07.724 [main] INFO  gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.724 [main] INFO  gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 0, VAF值: 0.65
+2025-09-05 19:18:07.724 [main] INFO  gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.724 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.725 [main] INFO  gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 70, VAF值: 1.35
 ]]></system-out>
   </testcase>
-  <testcase name="testBasicVafCalculation_AllZeroScores" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.01">
-    <system-out><![CDATA[17:39:42.159 [main] INFO gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=0, 权重=1, 贡献=0
-17:39:42.160 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=0, 权重=1, 贡献=0
-17:39:42.161 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=0, 权重=1, 贡献=0
-17:39:42.161 [main] INFO gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 0, VAF值: 0.65
+  <testcase name="testBasicVafCalculation_AllZeroScores" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.005">
+    <system-out><![CDATA[2025-09-05 19:18:07.731 [main] INFO  gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
+2025-09-05 19:18:07.731 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=0, 权重=1, 贡献=0
+2025-09-05 19:18:07.732 [main] INFO  gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 0, VAF值: 0.65
 ]]></system-out>
   </testcase>
-  <testcase name="testMaximumVafCalculation_AllFiveScores" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.004">
-    <system-out><![CDATA[17:39:42.166 [main] INFO gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=5, 权重=1, 贡献=5
-17:39:42.166 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=5, 权重=1, 贡献=5
-17:39:42.167 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=5, 权重=1, 贡献=5
-17:39:42.168 [main] INFO gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 70, VAF值: 1.35
+  <testcase name="testMaximumVafCalculation_AllFiveScores" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.001">
+    <system-out><![CDATA[2025-09-05 19:18:07.735 [main] INFO  gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=5, 权重=1, 贡献=5
+2025-09-05 19:18:07.735 [main] INFO  gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 70, VAF值: 1.35
 ]]></system-out>
   </testcase>
   <testcase name="testVafPrecisionAndRounding" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.002">
-    <system-out><![CDATA[17:39:42.171 [main] INFO gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=1, 权重=1, 贡献=1
-17:39:42.171 [main] INFO gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 14, VAF值: 0.79
+    <system-out><![CDATA[2025-09-05 19:18:07.737 [main] INFO  gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.737 [main] INFO  gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 14, VAF值: 0.79
 ]]></system-out>
   </testcase>
-  <testcase name="testVafFactorValidation" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.007"/>
+  <testcase name="testVafFactorValidation" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.002"/>
   <testcase name="testVafFactorContribution" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.001"/>
-  <testcase name="testTypicalProjectVafCalculation" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.003">
-    <system-out><![CDATA[17:39:42.184 [main] INFO gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
-17:39:42.184 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=4, 权重=1, 贡献=4
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=3, 权重=1, 贡献=3
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=4, 权重=1, 贡献=4
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=3, 权重=1, 贡献=3
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=3, 权重=1, 贡献=3
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=4, 权重=1, 贡献=4
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=4, 权重=1, 贡献=4
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=3, 权重=1, 贡献=3
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=3, 权重=1, 贡献=3
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=2, 权重=1, 贡献=2
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=2, 权重=1, 贡献=2
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=3, 权重=1, 贡献=3
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=1, 权重=1, 贡献=1
-17:39:42.185 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=3, 权重=1, 贡献=3
-17:39:42.185 [main] INFO gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 42, VAF值: 1.07
+  <testcase name="testTypicalProjectVafCalculation" classname="gov.changsha.finance.service.VafCalculationServiceTest" time="0.002">
+    <system-out><![CDATA[2025-09-05 19:18:07.744 [main] INFO  gov.changsha.finance.service.VafCalculationService - 开始计算VAF调整因子，项目ID: 1
+2025-09-05 19:18:07.744 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF01: 评分=4, 权重=1, 贡献=4
+2025-09-05 19:18:07.744 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF02: 评分=3, 权重=1, 贡献=3
+2025-09-05 19:18:07.744 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF03: 评分=4, 权重=1, 贡献=4
+2025-09-05 19:18:07.744 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF04: 评分=3, 权重=1, 贡献=3
+2025-09-05 19:18:07.744 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF05: 评分=3, 权重=1, 贡献=3
+2025-09-05 19:18:07.744 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF06: 评分=4, 权重=1, 贡献=4
+2025-09-05 19:18:07.745 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF07: 评分=4, 权重=1, 贡献=4
+2025-09-05 19:18:07.745 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF08: 评分=3, 权重=1, 贡献=3
+2025-09-05 19:18:07.745 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF09: 评分=3, 权重=1, 贡献=3
+2025-09-05 19:18:07.745 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF10: 评分=2, 权重=1, 贡献=2
+2025-09-05 19:18:07.745 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF11: 评分=2, 权重=1, 贡献=2
+2025-09-05 19:18:07.745 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF12: 评分=3, 权重=1, 贡献=3
+2025-09-05 19:18:07.745 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF13: 评分=1, 权重=1, 贡献=1
+2025-09-05 19:18:07.745 [main] DEBUG gov.changsha.finance.service.VafCalculationService - VAF因子 TF14: 评分=3, 权重=1, 贡献=3
+2025-09-05 19:18:07.745 [main] INFO  gov.changsha.finance.service.VafCalculationService - VAF计算完成，项目ID: 1, 总影响评分: 42, VAF值: 1.07
 ]]></system-out>
   </testcase>
 </testsuite>

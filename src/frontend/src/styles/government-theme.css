@@ -1,0 +1,240 @@
+/*
+ * 政府项目专用主题样式
+ * 符合政府信息化项目的专业性和权威性要求
+ */
+
+/* 政府项目品牌色彩 */
+:root {
+  --gov-primary: #1890ff;
+  --gov-primary-light: #40a9ff;
+  --gov-primary-dark: #096dd9;
+  --gov-secondary: #722ed1;
+  --gov-success: #52c41a;
+  --gov-warning: #faad14;
+  --gov-error: #f5222d;
+  --gov-info: #13c2c2;
+  
+  /* 政府项目中性色彩 */
+  --gov-gray-50: #fafafa;
+  --gov-gray-100: #f5f5f5;
+  --gov-gray-200: #f0f0f0;
+  --gov-gray-300: #d9d9d9;
+  --gov-gray-400: #bfbfbf;
+  --gov-gray-500: #8c8c8c;
+  --gov-gray-600: #595959;
+  --gov-gray-700: #434343;
+  --gov-gray-800: #262626;
+  --gov-gray-900: #1f1f1f;
+  
+  /* 阴影层次 */
+  --gov-shadow-1: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --gov-shadow-2: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --gov-shadow-3: 0 6px 16px rgba(0, 0, 0, 0.10);
+  --gov-shadow-4: 0 9px 28px rgba(0, 0, 0, 0.12);
+  
+  /* 圆角规范 */
+  --gov-radius-sm: 4px;
+  --gov-radius-md: 6px;
+  --gov-radius-lg: 8px;
+  --gov-radius-xl: 12px;
+}
+
+/* 政府项目页面整体样式增强 */
+.page-container--government {
+  background: linear-gradient(180deg, #fafbfc 0%, #f8f9fa 100%);
+  border: 1px solid var(--gov-gray-200);
+  box-shadow: var(--gov-shadow-1);
+}
+
+/* 政府项目专业性增强 */
+.page-container--professional {
+  position: relative;
+}
+
+.page-container--professional::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gov-primary) 0%, var(--gov-secondary) 100%);
+  border-radius: var(--gov-radius-sm) var(--gov-radius-sm) 0 0;
+}
+
+/* 增强表格页面的专业性 */
+.page-container--table.page-container--government {
+  background: #ffffff;
+  border: 1px solid var(--gov-gray-200);
+}
+
+/* 增强表单页面的可用性 */
+.page-container--form.page-container--professional {
+  background: var(--gov-gray-50);
+}
+
+.page-container--form .form-content {
+  background: transparent;
+}
+
+/* 增强应用页面的功能性 */
+.page-container--application.page-container--professional {
+  background: #f8f9fa;
+}
+
+/* 政府项目专用卡片样式 */
+.gov-card {
+  background: #ffffff;
+  border: 1px solid var(--gov-gray-200);
+  border-radius: var(--gov-radius-lg);
+  box-shadow: var(--gov-shadow-1);
+  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.gov-card:hover {
+  border-color: var(--gov-primary-light);
+  box-shadow: var(--gov-shadow-2);
+}
+
+/* 政府项目专用按钮增强 */
+.gov-button-primary {
+  background: var(--gov-primary);
+  border-color: var(--gov-primary);
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+}
+
+.gov-button-primary:hover {
+  background: var(--gov-primary-light);
+  border-color: var(--gov-primary-light);
+  box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+}
+
+/* 政府项目专用文字排版 */
+.gov-title-large {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--gov-gray-800);
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.gov-title-medium {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--gov-gray-800);
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.gov-title-small {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gov-gray-700);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.gov-text-body {
+  font-size: 14px;
+  color: var(--gov-gray-600);
+  line-height: 1.6;
+}
+
+.gov-text-caption {
+  font-size: 12px;
+  color: var(--gov-gray-500);
+  line-height: 1.5;
+}
+
+/* 政府项目状态指示器 */
+.gov-status-draft {
+  background: var(--gov-gray-100);
+  color: var(--gov-gray-600);
+  border: 1px solid var(--gov-gray-300);
+}
+
+.gov-status-processing {
+  background: #fff2e8;
+  color: var(--gov-warning);
+  border: 1px solid #ffd591;
+}
+
+.gov-status-completed {
+  background: #f6ffed;
+  color: var(--gov-success);
+  border: 1px solid #b7eb8f;
+}
+
+.gov-status-approved {
+  background: #e6f7ff;
+  color: var(--gov-primary);
+  border: 1px solid #91d5ff;
+}
+
+.gov-status-rejected {
+  background: #fff1f0;
+  color: var(--gov-error);
+  border: 1px solid #ffa39e;
+}
+
+/* 响应式优化 */
+@media (max-width: 1200px) {
+  .gov-title-large {
+    font-size: 24px;
+  }
+  
+  .gov-title-medium {
+    font-size: 20px;
+  }
+  
+  .gov-title-small {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-container--government {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .gov-title-large {
+    font-size: 22px;
+  }
+  
+  .gov-title-medium {
+    font-size: 18px;
+  }
+}
+
+/* 政府项目数据可视化增强 */
+.gov-data-highlight {
+  background: linear-gradient(135deg, var(--gov-primary) 0%, var(--gov-secondary) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+/* 无障碍优化 */
+.page-container--government {
+  outline: none;
+}
+
+.page-container--government:focus-within {
+  box-shadow: 0 0 0 2px var(--gov-primary), var(--gov-shadow-2);
+}
+
+/* 打印样式优化 */
+@media print {
+  .page-container--government {
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+  }
+  
+  .page-container--professional::before {
+    display: none !important;
+  }
+}

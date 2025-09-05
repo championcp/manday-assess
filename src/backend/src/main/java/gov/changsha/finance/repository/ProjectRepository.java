@@ -127,4 +127,5 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
      */
     @Query("UPDATE Project p SET p.deletedAt = NULL, p.deletedBy = NULL WHERE p.id = :id")
     int restoreById(@Param("id") Long id);
+
 }

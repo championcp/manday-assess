@@ -1,5 +1,5 @@
 <template>
-  <div class="project-list-container">
+  <div class="project-list-container page-container page-container--table page-container--government">
     <!-- 页面标题 -->
     <div class="page-header">
       <div class="title-section">
@@ -185,55 +185,14 @@ onMounted(() => {
 const loadProjectList = async () => {
   loading.value = true
   try {
-    // TODO: 调用API获取项目列表
-    // const response = await projectApi.getProjectList({
-    //   ...searchForm,
-    //   current: pagination.current,
-    //   size: pagination.size,
-    // })
+    const response = await projectApi.getProjectList({
+      ...searchForm,
+      current: pagination.current,
+      size: pagination.size,
+    })
     
-    // 模拟数据
-    const mockData = {
-      records: [
-        {
-          id: 1,
-          projectCode: 'PROJ-2025-001',
-          projectName: '长沙市政务服务平台升级项目',
-          description: '对现有政务服务平台进行功能升级和性能优化',
-          status: 'COMPLETED',
-          totalFunctionPoints: 2800,
-          estimatedCost: 8702416.80,
-          createdBy: '张工',
-          createTime: '2025-09-01 10:30:00',
-        },
-        {
-          id: 2,
-          projectCode: 'PROJ-2025-002',
-          projectName: '财政预算管理系统',
-          description: '建设新一代财政预算管理和监控系统',
-          status: 'CALCULATING',
-          totalFunctionPoints: 6200,
-          estimatedCost: null,
-          createdBy: '李工',
-          createTime: '2025-09-02 14:15:00',
-        },
-        {
-          id: 3,
-          projectCode: 'PROJ-2025-003',
-          projectName: '智慧城市数据中台',
-          description: '构建统一的城市数据中台和服务体系',
-          status: 'DRAFT',
-          totalFunctionPoints: null,
-          estimatedCost: null,
-          createdBy: '王工',
-          createTime: '2025-09-03 09:45:00',
-        },
-      ],
-      total: 3,
-    }
-    
-    projectList.value = mockData.records
-    pagination.total = mockData.total
+    projectList.value = response.records
+    pagination.total = response.total
   } catch (error: any) {
     ElMessage.error('加载项目列表失败：' + error.message)
   } finally {
@@ -346,7 +305,7 @@ const getStatusType = (status: string) => {
 
 <style scoped>
 .project-list-container {
-  padding: 20px;
+  /* 使用新的响应式布局系统，保持表格页面的标准宽度 */
 }
 
 .page-header {
@@ -414,5 +373,13 @@ const getStatusType = (status: string) => {
 
 :deep(.el-table__header-wrapper) {
   background: #fafafa;
+}
+
+:deep(.el-table) {
+  max-width: 100% !important;
+}
+
+:deep(.el-table .el-table__body-wrapper) {
+  overflow-x: auto;
 }
 </style>

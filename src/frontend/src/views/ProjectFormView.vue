@@ -1,5 +1,5 @@
 <template>
-  <div class="project-form-container">
+  <div class="project-form-container page-container page-container--form page-container--professional">
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-left">
@@ -414,9 +414,7 @@ const handleGoBack = () => {
 
 <style scoped>
 .project-form-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  /* 使用新的响应式布局系统，移除固定宽度 */
 }
 
 .page-header {
@@ -491,5 +489,17 @@ const handleGoBack = () => {
 
 :deep(.el-radio-group .el-radio) {
   margin-right: 16px;
+}
+
+:deep(.el-form) {
+  max-width: 100% !important;
+}
+
+:deep(.el-card) {
+  max-width: 100% !important;
+}
+
+:deep(.el-row) {
+  max-width: 100% !important;
 }
 </style>

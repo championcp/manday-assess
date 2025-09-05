@@ -57,9 +57,9 @@ export interface CalculationResult {
   estimatedCost: number
   estimatedDuration: number
   calculationDetails: {
-    elementsSummary: any[]
-    vafBreakdown: any[]
-    costBreakdown: any
+    elementsSummary: Array<Record<string, unknown>>
+    vafBreakdown: Array<Record<string, unknown>>
+    costBreakdown: Record<string, unknown>
   }
   calculationTime: string
 }
@@ -76,7 +76,7 @@ class NesmaApiService {
   /**
    * 获取项目的NESMA计算数据
    */
-  async getCalculationData(projectId: number): Promise<any> {
+  async getCalculationData(projectId: number): Promise<{ functionPointData: FunctionPointData; vafData: VafData; reuseLevel: string; step: number } | null> {
     return api.get(`/api/nesma/projects/${projectId}/calculation-data`)
   }
 
@@ -90,7 +90,7 @@ class NesmaApiService {
   /**
    * 获取NESMA计算草稿
    */
-  async getDraft(projectId: number): Promise<any> {
+  async getDraft(projectId: number): Promise<SaveDraftRequest | null> {
     return api.get(`/api/nesma/projects/${projectId}/draft`)
   }
 
@@ -104,7 +104,7 @@ class NesmaApiService {
   /**
    * 获取计算历史
    */
-  async getCalculationHistory(projectId: number): Promise<any[]> {
+  async getCalculationHistory(projectId: number): Promise<CalculationResult[]> {
     return api.get(`/api/nesma/projects/${projectId}/history`)
   }
 
@@ -125,28 +125,28 @@ class NesmaApiService {
   /**
    * 验证功能点数据
    */
-  async validateFunctionPointData(data: FunctionPointData): Promise<any> {
+  async validateFunctionPointData(data: FunctionPointData): Promise<{ isValid: boolean; errors: string[] }> {
     return api.post('/api/nesma/validate/function-points', data)
   }
 
   /**
    * 验证VAF数据
    */
-  async validateVafData(data: VafData): Promise<any> {
+  async validateVafData(data: VafData): Promise<{ isValid: boolean; errors: string[] }> {
     return api.post('/api/nesma/validate/vaf', data)
   }
 
   /**
    * 获取NESMA配置参数
    */
-  async getNesmaConfig(): Promise<any> {
+  async getNesmaConfig(): Promise<Record<string, unknown>> {
     return api.get('/api/nesma/config')
   }
 
   /**
    * 获取复用度建议
    */
-  async getReuseLevelRecommendation(projectId: number): Promise<any> {
+  async getReuseLevelRecommendation(projectId: number): Promise<{ recommendedLevel: string; reason: string; confidence: number }> {
     return api.get(`/api/nesma/projects/${projectId}/reuse-recommendation`)
   }
 
@@ -164,14 +164,14 @@ class NesmaApiService {
   /**
    * 比较计算结果
    */
-  async compareResults(projectIds: number[]): Promise<any> {
+  async compareResults(projectIds: number[]): Promise<{ comparison: CalculationResult[]; analysis: Record<string, unknown> }> {
     return api.post('/api/nesma/compare', { projectIds })
   }
 
   /**
    * 获取行业基准数据
    */
-  async getBenchmarkData(category?: string): Promise<any> {
+  async getBenchmarkData(category?: string): Promise<Record<string, unknown>> {
     return api.get('/api/nesma/benchmark', { params: { category } })
   }
 }
