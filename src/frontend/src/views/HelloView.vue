@@ -178,23 +178,43 @@ onMounted(() => {
 
 <style scoped>
 .hello-page {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 强制覆盖Element Plus容器样式 */
+.hello-page :deep(.el-container) {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.hello-page :deep(.el-header) {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.hello-page :deep(.el-main) {
+  width: 100% !important;
+  max-width: none !important;
 }
 
 .header {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  width: 100% !important;
+  max-width: none !important;
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   text-align: center;
-  padding: 20px 0;
+  padding: 20px;
 }
 
 .title {
@@ -223,8 +243,10 @@ onMounted(() => {
 }
 
 .welcome-section {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 20px;
 }
 
 .welcome-card {

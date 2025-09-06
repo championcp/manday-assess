@@ -47,8 +47,18 @@ public class ProjectController {
         Pageable pageable = PageRequest.of(current - 1, size, 
             Sort.by(Sort.Direction.DESC, "createdAt"));
         
-        // 查询项目（简化版，实际需要根据条件查询）
-        Page<SimpleProject> projectPage = projectRepository.findByDeletedFalse(pageable);
+        // 根据条件查询项目
+        System.out.println("DEBUG: keyword=" + keyword + ", status=" + status);
+        Page<SimpleProject> projectPage;
+        if ((keyword != null && !keyword.trim().isEmpty()) || (status != null && !status.trim().isEmpty())) {
+            // 有筛选条件时使用条件查询
+            System.out.println("DEBUG: 使用条件查询 - keyword=" + keyword + ", status=" + status);
+            projectPage = projectRepository.findProjectsWithFilters(keyword, status, pageable);
+        } else {
+            // 无筛选条件时查询所有项目
+            System.out.println("DEBUG: 使用普通查询");
+            projectPage = projectRepository.findByDeletedFalse(pageable);
+        }
         
         // 转换为响应DTO
         List<Map<String, Object>> records = projectPage.getContent().stream()
@@ -87,7 +97,7 @@ public class ProjectController {
     public ApiResponse<ProjectResponse> createProject(@RequestBody Map<String, Object> request) {
         // 简化的创建逻辑
         SimpleProject project = new SimpleProject();
-        project.setName((String) request.get("projectName"));
+        project.setName((String) request.get("name"));
         project.setDescription((String) request.get("description"));
         project.setProjectCode(generateProjectCode());
         project.setStatus("DRAFT");
@@ -120,7 +130,7 @@ public class ProjectController {
         
         // 更新项目信息
         if (request.containsKey("projectName")) {
-            project.setName((String) request.get("projectName"));
+            project.setName((String) request.get("name"));
         }
         if (request.containsKey("description")) {
             project.setDescription((String) request.get("description"));

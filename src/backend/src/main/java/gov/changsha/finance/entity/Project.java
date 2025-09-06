@@ -40,13 +40,13 @@ public class Project implements Serializable {
     /**
      * 项目名称
      */
-    @Column(name = "project_name", nullable = false, length = 200)
+    @Column(name = "name", nullable = false, length = 200)
     private String projectName;
 
     /**
      * 项目描述
      */
-    @Column(name = "project_description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String projectDescription;
 
     /**
@@ -60,8 +60,8 @@ public class Project implements Serializable {
      * 项目状态
      * 可选值: DRAFT(草稿), SUBMITTED(已提交), REVIEWING(评审中), APPROVED(已通过), REJECTED(已拒绝)
      */
-    @Column(name = "project_status", nullable = false, length = 30)
-    private String projectStatus;
+    @Column(name = "status", nullable = false, length = 30)
+    private String projectStatus = "DRAFT";
 
     /**
      * 项目优先级
@@ -159,14 +159,9 @@ public class Project implements Serializable {
     /**
      * 软删除标记
      */
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    @Column(name = "deleted", nullable = false)
+    private Boolean deleted = false;
 
-    /**
-     * 删除人ID
-     */
-    @Column(name = "deleted_by")
-    private Long deletedBy;
 
     /**
      * 版本号 - 用于乐观锁
@@ -386,20 +381,12 @@ public class Project implements Serializable {
         this.updatedBy = updatedBy;
     }
 
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
+    public Boolean getDeleted() {
+        return deleted;
     }
 
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
-    }
-
-    public Long getDeletedBy() {
-        return deletedBy;
-    }
-
-    public void setDeletedBy(Long deletedBy) {
-        this.deletedBy = deletedBy;
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 
     public Integer getVersion() {

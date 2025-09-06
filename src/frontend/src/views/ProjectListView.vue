@@ -16,7 +16,7 @@
     <!-- 搜索和筛选区域 -->
     <div class="search-filter-section">
       <el-row :gutter="20">
-        <el-col :span="8">
+        <el-col :span="6">
           <el-input
             v-model="searchForm.keyword"
             placeholder="搜索项目名称或编号"
@@ -25,7 +25,7 @@
             @input="handleSearch"
           />
         </el-col>
-        <el-col :span="6">
+        <el-col :span="4">
           <el-select
             v-model="searchForm.status"
             placeholder="项目状态"
@@ -33,11 +33,12 @@
             @change="handleSearch"
           >
             <el-option label="草稿" value="DRAFT" />
-            <el-option label="计算中" value="CALCULATING" />
+            <el-option label="进行中" value="IN_PROGRESS" />
             <el-option label="已完成" value="COMPLETED" />
-            <el-option label="审核中" value="REVIEWING" />
+            <el-option label="审核中" value="UNDER_REVIEW" />
             <el-option label="已通过" value="APPROVED" />
             <el-option label="已拒绝" value="REJECTED" />
+            <el-option label="已归档" value="ARCHIVED" />
           </el-select>
         </el-col>
         <el-col :span="6">
@@ -52,11 +53,13 @@
             @change="handleSearch"
           />
         </el-col>
-        <el-col :span="4">
-          <el-button type="primary" icon="Search" @click="handleSearch">
-            搜索
-          </el-button>
-          <el-button icon="Refresh" @click="handleReset">重置</el-button>
+        <el-col :span="8">
+          <div class="search-buttons">
+            <el-button type="primary" icon="Search" @click="handleSearch">
+              搜索
+            </el-button>
+            <el-button icon="Refresh" @click="handleReset">重置</el-button>
+          </div>
         </el-col>
       </el-row>
     </div>
@@ -144,6 +147,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { projectApi } from '../utils/projectApi'
 
 const router = useRouter()
 
@@ -169,11 +173,12 @@ const pagination = reactive({
 // 项目状态映射
 const statusMap = {
   DRAFT: { text: '草稿', type: 'info' },
-  CALCULATING: { text: '计算中', type: 'warning' },
+  IN_PROGRESS: { text: '进行中', type: 'warning' },
   COMPLETED: { text: '已完成', type: 'success' },
-  REVIEWING: { text: '审核中', type: 'primary' },
+  UNDER_REVIEW: { text: '审核中', type: 'primary' },
   APPROVED: { text: '已通过', type: 'success' },
   REJECTED: { text: '已拒绝', type: 'danger' },
+  ARCHIVED: { text: '已归档', type: '' },
 }
 
 // 生命周期
@@ -305,7 +310,9 @@ const getStatusType = (status: string) => {
 
 <style scoped>
 .project-list-container {
-  /* 使用新的响应式布局系统，保持表格页面的标准宽度 */
+  /* 强制覆盖layout.css中的宽度限制 */
+  max-width: none !important;
+  width: 100% !important;
 }
 
 .page-header {
@@ -381,5 +388,15 @@ const getStatusType = (status: string) => {
 
 :deep(.el-table .el-table__body-wrapper) {
   overflow-x: auto;
+}
+
+.search-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.search-buttons .el-button {
+  margin: 0;
 }
 </style>

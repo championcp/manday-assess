@@ -71,7 +71,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
            "(:projectType IS NULL OR p.projectType = :projectType) AND " +
            "(:departmentId IS NULL OR p.departmentId = :departmentId) AND " +
            "(:projectName IS NULL OR p.projectName LIKE %:projectName%) AND " +
-           "p.deletedAt IS NULL " +
+           "p.deleted = false " +
            "ORDER BY p.createdAt DESC")
     Page<Project> findProjectsWithFilters(@Param("projectStatus") String projectStatus,
                                          @Param("projectType") String projectType,
@@ -82,50 +82,50 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     /**
      * 统计各状态项目数量
      */
-    @Query("SELECT p.projectStatus, COUNT(p) FROM Project p WHERE p.deletedAt IS NULL GROUP BY p.projectStatus")
+    @Query("SELECT p.projectStatus, COUNT(p) FROM Project p WHERE p.deleted = false GROUP BY p.projectStatus")
     List<Object[]> countProjectsByStatus();
 
     /**
      * 统计各类型项目数量
      */
-    @Query("SELECT p.projectType, COUNT(p) FROM Project p WHERE p.deletedAt IS NULL GROUP BY p.projectType")
+    @Query("SELECT p.projectType, COUNT(p) FROM Project p WHERE p.deleted = false GROUP BY p.projectType")
     List<Object[]> countProjectsByType();
 
     /**
      * 统计部门项目数量
      */
-    @Query("SELECT p.departmentId, p.departmentName, COUNT(p) FROM Project p WHERE p.deletedAt IS NULL GROUP BY p.departmentId, p.departmentName")
+    @Query("SELECT p.departmentId, p.departmentName, COUNT(p) FROM Project p WHERE p.deleted = false GROUP BY p.departmentId, p.departmentName")
     List<Object[]> countProjectsByDepartment();
 
     /**
      * 查找即将到期的项目（在指定天数内到期）
      */
-    @Query("SELECT p FROM Project p WHERE p.endDate BETWEEN :startDate AND :endDate AND p.deletedAt IS NULL")
+    @Query("SELECT p FROM Project p WHERE p.endDate BETWEEN :startDate AND :endDate AND p.deleted = false")
     List<Project> findProjectsExpiringBetween(@Param("startDate") LocalDateTime startDate, 
                                             @Param("endDate") LocalDateTime endDate);
 
     /**
      * 查找有功能点的项目
      */
-    @Query("SELECT DISTINCT p FROM Project p INNER JOIN p.functionPoints fp WHERE fp.deletedAt IS NULL AND p.deletedAt IS NULL")
+    @Query("SELECT DISTINCT p FROM Project p INNER JOIN p.functionPoints fp WHERE p.deleted = false")
     List<Project> findProjectsWithFunctionPoints();
 
     /**
      * 查找有计算结果的项目
      */
-    @Query("SELECT DISTINCT p FROM Project p INNER JOIN p.calculationResults cr WHERE p.deletedAt IS NULL")
+    @Query("SELECT DISTINCT p FROM Project p INNER JOIN p.calculationResults cr WHERE p.deleted = false")
     List<Project> findProjectsWithCalculationResults();
 
     /**
      * 软删除项目
      */
-    @Query("UPDATE Project p SET p.deletedAt = :deletedAt, p.deletedBy = :deletedBy WHERE p.id = :id")
-    int softDeleteById(@Param("id") Long id, @Param("deletedAt") LocalDateTime deletedAt, @Param("deletedBy") Long deletedBy);
+    @Query("UPDATE Project p SET p.deleted = true WHERE p.id = :id")
+    int softDeleteById(@Param("id") Long id);
 
     /**
      * 恢复已删除的项目
      */
-    @Query("UPDATE Project p SET p.deletedAt = NULL, p.deletedBy = NULL WHERE p.id = :id")
+    @Query("UPDATE Project p SET p.deleted = false WHERE p.id = :id")
     int restoreById(@Param("id") Long id);
 
 }
