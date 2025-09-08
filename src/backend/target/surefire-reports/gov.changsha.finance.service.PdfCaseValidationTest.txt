@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: gov.changsha.finance.service.PdfCaseValidationTest
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.246 s -- in gov.changsha.finance.service.PdfCaseValidationTest

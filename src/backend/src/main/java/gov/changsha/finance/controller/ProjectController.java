@@ -95,9 +95,9 @@ public class ProjectController {
      */
     @PostMapping("")
     public ApiResponse<ProjectResponse> createProject(@RequestBody Map<String, Object> request) {
-        // 简化的创建逻辑
+        // 创建新项目
         SimpleProject project = new SimpleProject();
-        project.setName((String) request.get("name"));
+        project.setName((String) request.get("projectName"));
         project.setDescription((String) request.get("description"));
         project.setProjectCode(generateProjectCode());
         project.setStatus("DRAFT");
@@ -130,7 +130,7 @@ public class ProjectController {
         
         // 更新项目信息
         if (request.containsKey("projectName")) {
-            project.setName((String) request.get("name"));
+            project.setName((String) request.get("projectName"));
         }
         if (request.containsKey("description")) {
             project.setDescription((String) request.get("description"));
