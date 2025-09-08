@@ -149,14 +149,14 @@ const checkBackendStatus = async () => {
     backendStatus.value = { type: 'info', text: '连接中...' }
     
     // 调用后端Hello接口
-    const response = await api.get('/api/public/hello')
+    await api.get('/api/public/hello')
     
     backendStatus.value = { type: 'success', text: '连接正常' }
     dbStatus.value = { type: 'success', text: '连接正常' }
     cacheStatus.value = { type: 'success', text: '运行正常' }
     
     ElMessage.success('后端服务连接成功！')
-  } catch (error) {
+  } catch {
     backendStatus.value = { type: 'danger', text: '连接失败' }
     dbStatus.value = { type: 'warning', text: '未知' }
     cacheStatus.value = { type: 'warning', text: '未知' }
@@ -165,9 +165,9 @@ const checkBackendStatus = async () => {
   }
 }
 
-// 导航到演示页面
+// 导航到项目列表页面
 const navigateToDemo = () => {
-  ElMessage.info('功能开发中，敬请期待...')
+  window.location.href = '/projects'
 }
 
 // 组件挂载时检查后端状态
@@ -178,21 +178,43 @@ onMounted(() => {
 
 <style scoped>
 .hello-page {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 强制覆盖Element Plus容器样式 */
+.hello-page :deep(.el-container) {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.hello-page :deep(.el-header) {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.hello-page :deep(.el-main) {
+  width: 100% !important;
+  max-width: none !important;
 }
 
 .header {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  width: 100% !important;
+  max-width: none !important;
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   text-align: center;
-  padding: 20px 0;
+  padding: 20px;
 }
 
 .title {
@@ -221,8 +243,10 @@ onMounted(() => {
 }
 
 .welcome-section {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 20px;
 }
 
 .welcome-card {

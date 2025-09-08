@@ -23,7 +23,7 @@ public class EoDetail implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "function_point_id", nullable = false)
+    @Column(name = "function_point_id", nullable = false, insertable = false, updatable = false)
     private Long functionPointId;
 
     @OneToOne(fetch = FetchType.LAZY)

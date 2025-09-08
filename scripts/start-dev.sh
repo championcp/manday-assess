@@ -53,12 +53,65 @@ echo "   Redis: localhost:6379"
 echo "   pgAdmin: http://localhost:5050 (admin@changsha.gov.cn / admin123)"
 echo "   Redis Commander: http://localhost:8081"
 echo ""
-echo "🔧 后端启动命令:"
-echo "   cd src/backend && ./mvnw spring-boot:run"
+echo "🔧 启动后端服务..."
+echo "   后端将在新终端窗口中启动"
+sleep 2
+
+# 在新终端窗口中启动后端
+if command -v osascript > /dev/null 2>&1; then
+    # macOS
+    osascript -e "tell application \"Terminal\" to do script \"cd '$(pwd)' && cd src/backend && echo '🚀 启动Spring Boot后端服务...' && echo '📍 访问地址: http://localhost:8080' && echo '💡 使用 Ctrl+C 停止服务' && echo '' && ./mvnw spring-boot:run\""
+else
+    echo "请在新终端中运行: cd src/backend && ./mvnw spring-boot:run"
+fi
+
+# 等待后端启动
+echo -e "${YELLOW}⏳ 等待后端服务启动...${NC}"
+for i in {1..20}; do
+    if curl -s --max-time 3 http://localhost:8080/actuator/health > /dev/null 2>&1 || \
+       curl -s --max-time 3 http://localhost:8080/api/projects > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ 后端服务启动成功${NC}"
+        break
+    fi
+    echo "等待后端启动... ($i/20)"
+    sleep 3
+done
+
 echo ""
-echo "🎨 前端启动命令:"
-echo "   cd src/frontend && npm run dev"
+echo "🎨 启动前端服务..."
+echo "   前端将在新终端窗口中启动"
+sleep 2
+
+# 在新终端窗口中启动前端
+if command -v osascript > /dev/null 2>&1; then
+    # macOS
+    osascript -e "tell application \"Terminal\" to do script \"cd '$(pwd)' && cd src/frontend && echo '🚀 启动Vue.js前端服务...' && echo '📍 访问地址: http://localhost:5173' && echo '💡 使用 Ctrl+C 停止服务' && echo '' && npm run dev\""
+else
+    echo "请在新终端中运行: cd src/frontend && npm run dev"
+fi
+
+# 等待前端启动
+echo -e "${YELLOW}⏳ 等待前端服务启动...${NC}"
+for i in {1..15}; do
+    if curl -s --max-time 3 http://localhost:5173 > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ 前端服务启动成功${NC}"
+        break
+    fi
+    echo "等待前端启动... ($i/15)"
+    sleep 3
+done
+
+echo ""
+echo -e "${GREEN}🎉 完整开发环境启动完成!${NC}"
+echo ""
+echo -e "${BLUE}📍 服务访问地址:${NC}"
+echo "   🌐 系统首页: http://localhost:5173"
+echo "   🔧 API接口: http://localhost:8080/api"
+echo "   📚 API文档: http://localhost:8080/swagger-ui.html"
+echo "   💾 数据库管理: http://localhost:5050 (admin@changsha.gov.cn / admin123)"
+echo "   🗄️  Redis管理: http://localhost:8081"
 echo ""
 echo "⏹️  停止服务:"
-echo "   docker-compose down"
+echo "   docker-compose down  # 停止数据库服务"
+echo "   在各终端窗口中按 Ctrl+C 停止前后端服务"
 echo ""

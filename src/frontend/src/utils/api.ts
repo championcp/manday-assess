@@ -4,7 +4,7 @@ import type { AxiosResponse, AxiosError } from 'axios'
 /**
  * API 响应数据结构
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number
   message: string
   data: T

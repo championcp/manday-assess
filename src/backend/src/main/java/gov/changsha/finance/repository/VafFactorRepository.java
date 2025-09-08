@@ -90,27 +90,28 @@ public interface VafFactorRepository extends JpaRepository<VafFactor, Long> {
      * 查找缺少的VAF因子类型
      * 用于识别项目缺少的标准因子
      */
-    @Query("SELECT ft.factorType FROM " +
+    @Query(value = "SELECT ft.factorType FROM " +
            "(SELECT 'TF01' as factorType UNION SELECT 'TF02' UNION SELECT 'TF03' UNION SELECT 'TF04' UNION " +
            "SELECT 'TF05' UNION SELECT 'TF06' UNION SELECT 'TF07' UNION SELECT 'TF08' UNION " +
            "SELECT 'TF09' UNION SELECT 'TF10' UNION SELECT 'TF11' UNION SELECT 'TF12' UNION " +
            "SELECT 'TF13' UNION SELECT 'TF14') ft " +
            "WHERE ft.factorType NOT IN " +
-           "(SELECT vf.factorType FROM VafFactor vf WHERE vf.project.id = :projectId)")
+           "(SELECT vf.factor_type FROM vaf_factors vf WHERE vf.project_id = :projectId)", 
+           nativeQuery = true)
     List<String> findMissingFactorTypesByProjectId(@Param("projectId") Long projectId);
 
     /**
      * 按创建时间降序查找VAF因子
      * 用于审计追踪和历史记录查询
      */
-    @Query("SELECT vf FROM VafFactor vf WHERE vf.project.id = :projectId ORDER BY vf.createTime DESC")
+    @Query("SELECT vf FROM VafFactor vf WHERE vf.project.id = :projectId ORDER BY vf.createdAt DESC")
     List<VafFactor> findByProjectIdOrderByCreateTimeDesc(@Param("projectId") Long projectId);
 
     /**
      * 查找最近更新的VAF因子
      * 用于审计和变更追踪
      */
-    @Query("SELECT vf FROM VafFactor vf WHERE vf.project.id = :projectId ORDER BY vf.updateTime DESC")
+    @Query("SELECT vf FROM VafFactor vf WHERE vf.project.id = :projectId ORDER BY vf.updatedAt DESC")
     List<VafFactor> findByProjectIdOrderByUpdateTimeDesc(@Param("projectId") Long projectId);
 
     /**

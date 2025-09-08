@@ -1,4 +1,6 @@
 import './assets/main.css'
+import './styles/layout.css'
+import './styles/government-theme.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

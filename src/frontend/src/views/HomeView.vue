@@ -3,7 +3,7 @@ import TheWelcome from '../components/TheWelcome.vue'
 </script>
 
 <template>
-  <main>
+  <main class="page-container page-container--content page-container--government">
     <TheWelcome />
   </main>
 </template>
