@@ -20,29 +20,33 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 echo -e "${BLUE}📦 启动数据库和缓存服务...${NC}"
-docker-compose up -d postgres redis
+cd deployment/dev && docker-compose -f docker-compose.dev.yml up -d postgres redis
+cd - > /dev/null
 
 # 等待数据库启动
 echo -e "${YELLOW}⏳ 等待数据库启动...${NC}"
-until docker-compose exec postgres pg_isready -U postgres > /dev/null 2>&1; do
+until cd deployment/dev && docker-compose -f docker-compose.dev.yml exec postgres pg_isready -U postgres > /dev/null 2>&1; do
   echo "等待PostgreSQL启动..."
   sleep 2
 done
+cd - > /dev/null
 
 echo -e "${GREEN}✅ 数据库启动成功${NC}"
 
 # 等待Redis启动
 echo -e "${YELLOW}⏳ 等待Redis启动...${NC}"
-until docker-compose exec redis redis-cli ping > /dev/null 2>&1; do
+until cd deployment/dev && docker-compose -f docker-compose.dev.yml exec redis redis-cli ping > /dev/null 2>&1; do
   echo "等待Redis启动..."
   sleep 1
 done
+cd - > /dev/null
 
 echo -e "${GREEN}✅ Redis启动成功${NC}"
 
 # 显示服务状态
 echo -e "${BLUE}📊 服务状态:${NC}"
-docker-compose ps
+cd deployment/dev && docker-compose -f docker-compose.dev.yml ps
+cd - > /dev/null
 
 echo ""
 echo -e "${GREEN}🎉 开发环境启动完成!${NC}"
@@ -112,6 +116,6 @@ echo "   💾 数据库管理: http://localhost:5050 (admin@changsha.gov.cn / ad
 echo "   🗄️  Redis管理: http://localhost:8081"
 echo ""
 echo "⏹️  停止服务:"
-echo "   docker-compose down  # 停止数据库服务"
+echo "   cd deployment/dev && docker-compose -f docker-compose.dev.yml down  # 停止数据库服务"
 echo "   在各终端窗口中按 Ctrl+C 停止前后端服务"
 echo ""

@@ -14,7 +14,7 @@ services:
       - "5433:5432"
     volumes:
       - /Users/chengpeng/docker/app/data/manday-assess/postgres:/var/lib/postgresql/data
-      - ./deployment/init-db:/docker-entrypoint-initdb.d
+      - ../init-db:/docker-entrypoint-initdb.d
     networks:
       - manday-assess-network
     healthcheck:

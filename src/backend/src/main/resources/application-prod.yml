@@ -1,0 +1,172 @@
+# 生产环境配置 - 政府级安全标准
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore/manday-assess-keystore.p12
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:changeit}
+    key-store-type: PKCS12
+    key-alias: manday-assess
+    protocol: TLS
+    enabled-protocols: TLSv1.2,TLSv1.3
+    ciphers: >
+      TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+      TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+      TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+      TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+  http2:
+    enabled: true
+
+spring:
+  profiles:
+    active: prod
+  
+  # 数据库配置
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:manday_assess_prod}
+    username: ${DB_USERNAME:manday_assess}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+  
+  # Redis配置
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD}
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 50
+        max-idle: 20
+        min-idle: 5
+        max-wait: 3000ms
+  
+  # Jackson配置
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: NON_NULL
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+
+# 应用配置
+app:
+  # JWT配置
+  jwt:
+    secret: ${JWT_SECRET:bWFuZGF5LWFzc2Vzcy1zZWNyZXQtZm9yLWNoYW5nc2hhLWZpbmFuY2UtZ292ZXJubWVudC1wcm9qZWN0LXNlY3VyaXR5LWtleQ==}
+    expiration: 28800  # 8小时 (生产环境缩短过期时间)
+    refresh-expiration: 259200  # 3天
+  
+  # 安全配置
+  security:
+    password:
+      min-length: 8
+      max-length: 128
+      require-uppercase: true
+      require-lowercase: true
+      require-digits: true
+      require-special-chars: true
+    login:
+      max-attempts: 5
+      lockout-duration: 30m
+      session-timeout: 8h
+    
+    # 审计配置
+    audit:
+      enabled: true
+      log-retention-days: 365  # 政府要求保留1年
+      high-risk-alert: true
+      
+    # 数据加密
+    encryption:
+      algorithm: AES-256-GCM
+      key: ${DATA_ENCRYPTION_KEY}
+
+# 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      roles: ADMIN
+  metrics:
+    enabled: true
+    export:
+      prometheus:
+        enabled: true
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    gov.changsha.finance: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+  file:
+    name: /var/log/manday-assess/application.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# 文件上传配置
+spring.servlet.multipart:
+  max-file-size: 10MB
+  max-request-size: 50MB
+
+# 系统配置
+system:
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # 每天凌晨2点
+    retention-days: 30
+    encrypt: true
+    location: /data/backups/manday-assess/
+  
+  security:
+    rate-limit:
+      enabled: true
+      requests-per-minute: 100
+    
+    ip-whitelist:
+      enabled: false
+      addresses: []
+    
+    # 会话安全
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: strict
+        max-age: 28800  # 8小时

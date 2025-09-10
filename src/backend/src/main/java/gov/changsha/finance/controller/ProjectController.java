@@ -103,6 +103,7 @@ public class ProjectController {
         project.setStatus("DRAFT");
         project.setComplexityLevel("MEDIUM");
         project.setCreatedBy(1L); // 默认用户ID
+        project.setUpdatedBy(1L); // 默认用户ID
         project.setCreatedAt(LocalDateTime.now());
         project.setUpdatedAt(LocalDateTime.now());
         project.setDeleted(false);
