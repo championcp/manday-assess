@@ -40,20 +40,20 @@ public class FunctionPoint implements Serializable {
     /**
      * 功能点名称
      */
-    @Column(name = "function_point_name", nullable = false, length = 200)
+    @Column(name = "fp_name", nullable = false, length = 200)
     private String functionPointName;
 
     /**
      * 功能点描述
      */
-    @Column(name = "function_point_description", columnDefinition = "TEXT")
+    @Column(name = "fp_description", columnDefinition = "TEXT")
     private String functionPointDescription;
 
     /**
      * 功能点类型
      * 可选值: ILF(内部逻辑文件), EIF(外部接口文件), EI(外部输入), EO(外部输出), EQ(外部查询)
      */
-    @Column(name = "function_point_type", nullable = false, length = 20)
+    @Column(name = "fp_type", nullable = false, length = 10)
     private String functionPointType;
 
     /**

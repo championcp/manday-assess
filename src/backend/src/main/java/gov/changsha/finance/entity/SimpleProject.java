@@ -23,10 +23,10 @@ public class SimpleProject {
     @Column(name = "project_code")
     private String projectCode;
 
-    @Column(name = "name")
+    @Column(name = "project_name")
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "project_description")
     private String description;
 
     @Column(name = "client_name")
@@ -35,7 +35,7 @@ public class SimpleProject {
     @Column(name = "project_type")
     private String projectType;
 
-    @Column(name = "status")
+    @Column(name = "project_status")
     private String status;
 
     @Column(name = "created_by")

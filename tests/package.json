@@ -1,0 +1,21 @@
+{
+  "name": "manday-assess-tests",
+  "version": "1.0.0",
+  "description": "NESMA功能点评估系统 - 测试工具套件",
+  "main": "index.js",
+  "scripts": {
+    "test:api": "node integration/api-integration-test-auth.js",
+    "test:api-suite": "node integration/Sprint3_API_Integration_Test_Suite.js",
+    "test:api-validation": "node integration/api-validation-test.js",
+    "test:performance": "node performance/authenticated-performance-test.js",
+    "test:quick": "node performance/quick-performance-test.js",
+    "test:integration": "npm run test:api && npm run test:api-suite && npm run test:api-validation",
+    "test:all": "npm run test:integration && npm run test:performance"
+  },
+  "keywords": ["NESMA", "测试", "API", "性能测试"],
+  "author": "长沙市财政评审中心开发团队",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.11.0"
+  }
+}

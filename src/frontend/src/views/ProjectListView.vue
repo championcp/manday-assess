@@ -7,6 +7,10 @@
         <p class="page-description">软件规模评估项目的统一管理平台</p>
       </div>
       <div class="action-section">
+        <div class="user-info">
+          <span class="welcome-text">欢迎，{{ userInfo.realName || userInfo.username }}</span>
+          <el-button @click="handleLogout" size="small" type="info">退出登录</el-button>
+        </div>
         <el-button type="primary" icon="Plus" @click="handleCreateProject">
           新建项目
         </el-button>
@@ -155,6 +159,9 @@ const router = useRouter()
 const loading = ref(false)
 const projectList = ref<any[]>([])
 const selectedProjects = ref<any[]>([])
+
+// 用户信息
+const userInfo = reactive(JSON.parse(localStorage.getItem('userInfo') || '{}'))
 
 // 搜索表单
 const searchForm = reactive({
@@ -305,6 +312,19 @@ const getStatusText = (status: string) => {
 
 const getStatusType = (status: string) => {
   return (statusMap as any)[status]?.type || 'info'
+}
+
+const handleLogout = () => {
+  ElMessageBox.confirm('确认退出登录吗？', '退出确认', {
+    type: 'warning',
+  }).then(() => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userInfo')
+    ElMessage.success('已退出登录')
+    router.push('/login')
+  }).catch(() => {
+    // 用户取消操作
+  })
 }
 </script>
 
