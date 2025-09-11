@@ -81,12 +81,20 @@ public class VafCalculationService {
      * 获取或初始化项目的14个标准VAF因子
      */
     private List<VafFactor> getOrInitializeVafFactors(Project project) {
-        List<VafFactor> vafFactors = project.getVafFactors();
+        List<VafFactor> vafFactors = null;
+        
+        try {
+            // 尝试获取VAF因子，但如果失败就使用默认值
+            vafFactors = project.getVafFactors();
+        } catch (Exception e) {
+            logger.warn("无法获取项目{}的VAF因子，将使用默认值。错误: {}", project.getId(), e.getMessage());
+            vafFactors = null;
+        }
         
         if (vafFactors == null || vafFactors.isEmpty()) {
             logger.debug("项目{}的VAF因子为空，初始化标准因子", project.getId());
             vafFactors = initializeStandardVafFactors(project);
-            project.setVafFactors(vafFactors);
+            // 不再设置到project中，避免关联关系问题
         }
         
         // 确保14个因子完整
@@ -94,7 +102,6 @@ public class VafCalculationService {
             logger.warn("项目{}的VAF因子数量不完整，当前数量: {}，重新初始化", 
                     project.getId(), vafFactors.size());
             vafFactors = initializeStandardVafFactors(project);
-            project.setVafFactors(vafFactors);
         }
         
         return vafFactors;

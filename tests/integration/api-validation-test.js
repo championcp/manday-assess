@@ -127,7 +127,7 @@ class APIValidationTest {
         
         try {
             const startTime = Date.now();
-            const response = await axios.post(`${this.baseURL}/api/nesma/calculate/${projectId}`);
+            const response = await axios.post(`${this.baseURL}/api/simple-nesma/calculate/${projectId}`);
             const duration = Date.now() - startTime;
             
             if (response.data && response.data.code === 200) {

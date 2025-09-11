@@ -12,10 +12,16 @@
     "test:integration": "npm run test:api && npm run test:api-suite && npm run test:api-validation",
     "test:all": "npm run test:integration && npm run test:performance"
   },
-  "keywords": ["NESMA", "测试", "API", "性能测试"],
+  "keywords": [
+    "NESMA",
+    "测试",
+    "API",
+    "性能测试"
+  ],
   "author": "长沙市财政评审中心开发团队",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.11.0"
+    "axios": "^1.11.0",
+    "pg": "^8.16.3"
   }
 }
