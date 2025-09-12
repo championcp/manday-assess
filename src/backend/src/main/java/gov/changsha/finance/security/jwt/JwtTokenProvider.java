@@ -39,7 +39,7 @@ public class JwtTokenProvider {
     private static final String EMPLOYEE_ID_KEY = "employeeId";
     private static final String DEPARTMENT_KEY = "department";
     
-    @Value("${app.jwt.secret:bWFuZGF5LWFzc2Vzcy1zZWNyZXQtZm9yLWNoYW5nc2hhLWZpbmFuY2UtZ292ZXJubWVudC1wcm9qZWN0LXNlY3VyaXR5LWtleQ==}")
+    @Value("${app.jwt.secret:}")
     private String jwtSecret;
     
     @Value("${app.jwt.expiration:86400}")  // 24小时，符合政府安全要求
@@ -54,8 +54,14 @@ public class JwtTokenProvider {
      * 初始化密钥
      */
     public void init() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        if (jwtSecret != null && !jwtSecret.trim().isEmpty()) {
+            byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+            this.key = Keys.hmacShaKeyFor(keyBytes);
+            logger.info("JWT TokenProvider初始化完成，使用配置密钥，长度: {} bits", key.getEncoded().length * 8);
+        } else {
+            this.key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+            logger.info("JWT TokenProvider初始化完成，动态生成密钥，长度: {} bits", key.getEncoded().length * 8);
+        }
     }
     
     private SecretKey getKey() {
