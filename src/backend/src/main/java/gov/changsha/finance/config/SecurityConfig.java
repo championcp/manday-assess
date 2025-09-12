@@ -130,6 +130,11 @@ public class SecurityConfig {
                 .antMatchers("/api/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/management/**").hasAnyRole("ADMIN", "PROJECT_MANAGER")
                 .antMatchers("/api/projects/**").hasAnyRole("PROJECT_MANAGER", "ADMIN", "ASSESSOR")
+                
+                // NESMA计算相关 - 需要评审员权限
+                .antMatchers("/api/nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
+                .antMatchers("/api/simple-nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
+                
                 .antMatchers("/api/**").authenticated()
                 
                 // 其他请求需要认证
@@ -175,6 +180,7 @@ public class SecurityConfig {
                 
                 // NESMA计算相关 - 需要评审员权限
                 .antMatchers("/api/nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
+                .antMatchers("/api/simple-nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
                 .antMatchers("/api/projects/**").hasAnyRole("PROJECT_MANAGER", "ADMIN")
                 
                 // 用户相关 - 认证用户可访问
