@@ -170,7 +170,7 @@ public class SecurityConfig {
                 
                 // 管理端点 - 需要管理员权限
                 .antMatchers("/api/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/management/**").hasAnyRole("ADMIN", "MANAGER")
+                .antMatchers("/api/management/**").hasAnyRole("ADMIN", "PROJECT_MANAGER")
                 .antMatchers("/api/audit/**").hasRole("AUDITOR")
                 
                 // NESMA计算相关 - 需要评审员权限
