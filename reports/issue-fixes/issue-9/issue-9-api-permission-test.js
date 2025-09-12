@@ -27,29 +27,29 @@ const config = {
 // 创建axios实例
 const api = axios.create(config);
 
-// 测试用户凭据
+// 测试用户凭据 - 从环境变量获取，避免硬编码安全敏感信息
 const testUsers = {
     admin: {
-        username: 'admin',
-        password: 'admin123',
+        username: process.env.TEST_ADMIN_USER || 'admin',
+        password: process.env.TEST_ADMIN_PASS || 'default_admin_pass',
         role: 'ADMIN',
         description: '系统管理员 - 应该拥有所有项目管理权限'
     },
     projectManager: {
-        username: 'pm',
-        password: 'pm123',  
+        username: process.env.TEST_PM_USER || 'pm',
+        password: process.env.TEST_PM_PASS || 'default_pm_pass',  
         role: 'PROJECT_MANAGER',
         description: '项目经理 - 应该能创建和管理项目'
     },
     assessor: {
-        username: 'assessor',
-        password: 'assessor123',
+        username: process.env.TEST_ASSESSOR_USER || 'assessor',
+        password: process.env.TEST_ASSESSOR_PASS || 'default_assessor_pass',
         role: 'ASSESSOR', 
         description: '评估人员 - 应该只能查看项目'
     },
     user: {
-        username: 'user',
-        password: 'user123',
+        username: process.env.TEST_USER_USER || 'user',
+        password: process.env.TEST_USER_PASS || 'default_user_pass',
         role: 'USER',
         description: '普通用户 - 不应该能访问项目API'
     }
