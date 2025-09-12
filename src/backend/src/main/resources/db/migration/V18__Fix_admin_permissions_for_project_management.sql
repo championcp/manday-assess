@@ -7,17 +7,17 @@
 -- =====================================================
 
 -- 检查并插入项目管理相关权限（如果不存在）
-INSERT INTO permissions (name, code, description, resource, action, permission_type, sort_order, created_by, updated_by) 
+INSERT INTO permissions (name, code, description, resource_path, http_method, permission_type, module, sort_order, created_by, updated_by) 
 VALUES
-('项目创建', 'PROJECT_CREATE', '创建新项目权限', '/api/projects/**', 'POST', 'FUNCTIONAL', 10, 'system', 'system'),
-('项目查看', 'PROJECT_READ', '查看项目详情权限', '/api/projects/**', 'GET', 'FUNCTIONAL', 11, 'system', 'system'),
-('项目更新', 'PROJECT_UPDATE', '更新项目信息权限', '/api/projects/**', 'PUT', 'FUNCTIONAL', 12, 'system', 'system'),
-('项目删除', 'PROJECT_DELETE', '删除项目权限', '/api/projects/**', 'DELETE', 'FUNCTIONAL', 13, 'system', 'system')
+('项目创建', 'PROJECT_CREATE', '创建新项目权限', '/api/projects/**', 'POST', 'API', 'PROJECT', 10, 'system', 'system'),
+('项目查看', 'PROJECT_READ', '查看项目详情权限', '/api/projects/**', 'GET', 'API', 'PROJECT', 11, 'system', 'system'),
+('项目更新', 'PROJECT_UPDATE', '更新项目信息权限', '/api/projects/**', 'PUT', 'API', 'PROJECT', 12, 'system', 'system'),
+('项目删除', 'PROJECT_DELETE', '删除项目权限', '/api/projects/**', 'DELETE', 'API', 'PROJECT', 13, 'system', 'system')
 ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name,
     description = EXCLUDED.description,
-    resource = EXCLUDED.resource,
-    action = EXCLUDED.action,
+    resource_path = EXCLUDED.resource_path,
+    http_method = EXCLUDED.http_method,
     updated_at = CURRENT_TIMESTAMP;
 
 -- =====================================================
@@ -110,15 +110,15 @@ SELECT
     r.code as role_code,
     p.name as permission_name,
     p.code as permission_code,
-    p.resource,
-    p.action
+    p.resource_path,
+    p.http_method
 FROM users u
 JOIN user_roles ur ON u.id = ur.user_id
 JOIN roles r ON ur.role_id = r.id
 JOIN role_permissions rp ON r.id = rp.role_id
 JOIN permissions p ON rp.permission_id = p.id
 WHERE u.username = 'admin'
-  AND (p.resource LIKE '%project%' OR p.code LIKE '%PROJECT%')
+  AND (p.resource_path LIKE '%project%' OR p.code LIKE '%PROJECT%')
 ORDER BY p.sort_order;
 
 -- 输出验证信息
@@ -146,14 +146,14 @@ DROP VIEW IF EXISTS admin_permissions_check;
 -- 7. 添加表注释和字段说明
 -- =====================================================
 
-COMMENT ON COLUMN permissions.resource IS 'API资源路径，用于Spring Security权限匹配';
-COMMENT ON COLUMN permissions.action IS 'HTTP动作类型：GET, POST, PUT, DELETE, *';
+COMMENT ON COLUMN permissions.resource_path IS 'API资源路径，用于Spring Security权限匹配';
+COMMENT ON COLUMN permissions.http_method IS 'HTTP动作类型：GET, POST, PUT, DELETE, *';
 COMMENT ON COLUMN role_permissions.role_id IS '角色ID，关联roles表';
 COMMENT ON COLUMN role_permissions.permission_id IS '权限ID，关联permissions表';
 
 -- 添加修复记录
-INSERT INTO permissions (name, code, description, resource, action, permission_type, sort_order, created_by, updated_by) 
-VALUES ('权限修复记录', 'ISSUE_9_FIX', 'Issue #9权限修复记录', 'system', 'MAINTENANCE', 'FUNCTIONAL', 999, 'migration_v18', 'migration_v18')
+INSERT INTO permissions (name, code, description, resource_path, http_method, permission_type, module, sort_order, created_by, updated_by) 
+VALUES ('权限修复记录', 'ISSUE_9_FIX', 'Issue #9权限修复记录', 'system', 'MAINTENANCE', 'API', 'SYSTEM', 999, 'migration_v18', 'migration_v18')
 ON CONFLICT (code) DO UPDATE SET updated_at = CURRENT_TIMESTAMP;
 
 -- 记录修复完成时间
@@ -162,10 +162,14 @@ SET updated_at = CURRENT_TIMESTAMP,
     updated_by = 'migration_v18'
 WHERE code IN ('PROJECT_MANAGE', 'PROJECT_CREATE', 'PROJECT_READ', 'PROJECT_UPDATE', 'PROJECT_DELETE');
 
-RAISE NOTICE '==========================================';
-RAISE NOTICE 'Issue #9 权限修复完成！';
-RAISE NOTICE '修复内容：';
-RAISE NOTICE '1. ✅ SecurityConfig权限路径已更新';
-RAISE NOTICE '2. ✅ 管理员角色项目管理权限已配置';
-RAISE NOTICE '3. ✅ 权限验证机制已完善';
-RAISE NOTICE '==========================================';
+-- 记录修复完成信息
+DO $$
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Issue #9 权限修复完成！';
+    RAISE NOTICE '修复内容：';
+    RAISE NOTICE '1. ✅ SecurityConfig权限路径已更新';
+    RAISE NOTICE '2. ✅ 管理员角色项目管理权限已配置';
+    RAISE NOTICE '3. ✅ 权限验证机制已完善';
+    RAISE NOTICE '==========================================';
+END$$;
