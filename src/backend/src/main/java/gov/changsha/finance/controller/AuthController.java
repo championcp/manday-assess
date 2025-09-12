@@ -317,12 +317,23 @@ public class AuthController {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.isAuthenticated()) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                return ResponseEntity.ok(ApiResponse.success("获取用户信息成功", userPrincipal));
+                // 检查principal类型，避免ClassCastException
+                Object principal = authentication.getPrincipal();
+                if (principal instanceof UserPrincipal) {
+                    UserPrincipal userPrincipal = (UserPrincipal) principal;
+                    logger.info("获取用户信息成功 - 用户: {}", userPrincipal.getUsername());
+                    return ResponseEntity.ok(ApiResponse.success("获取用户信息成功", userPrincipal));
+                } else {
+                    // principal是String类型，说明是匿名用户或认证失败
+                    logger.warn("获取用户信息失败 - 无效的认证类型: {}", principal.getClass().getSimpleName());
+                    return ResponseEntity.status(401)
+                        .body(ApiResponse.error(401, "用户未认证或认证已过期"));
+                }
             }
             
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("未找到用户认证信息"));
+            logger.warn("获取用户信息失败 - 未找到认证信息");
+            return ResponseEntity.status(401)
+                .body(ApiResponse.error(401, "用户未认证"));
             
         } catch (Exception ex) {
             logger.error("获取当前用户信息异常", ex);
