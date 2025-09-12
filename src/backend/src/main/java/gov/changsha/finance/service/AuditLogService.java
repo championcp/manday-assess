@@ -140,6 +140,36 @@ public class AuditLogService {
     }
     
     /**
+     * 记录用户注册
+     */
+    public void recordRegistration(User user, String ipAddress, String clientInfo) {
+        AuditLog auditLog = new AuditLog(
+            AuditLog.OperationType.REGISTER,
+            "AUTH",
+            "用户注册新账户"
+        );
+        
+        setUserInfo(auditLog, user);
+        auditLog.setIpAddress(ipAddress);
+        auditLog.setUserAgent(clientInfo);
+        auditLog.setRiskLevel(AuditLog.RiskLevel.MEDIUM); // 注册是中风险操作
+        auditLog.setBusinessType("User");
+        auditLog.setBusinessId(user.getId().toString());
+        
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("registrationTime", LocalDateTime.now());
+            data.put("userInfo", createSafeUserInfo(user));
+            auditLog.setBusinessData(objectMapper.writeValueAsString(data));
+        } catch (Exception e) {
+            logger.warn("记录用户注册审计日志数据时出错", e);
+        }
+        
+        generateSignature(auditLog);
+        saveAuditLog(auditLog);
+    }
+    
+    /**
      * 记录账户解锁
      */
     public void recordAccountUnlock(User user) {
