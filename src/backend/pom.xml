@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>3.5.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     
@@ -16,15 +16,15 @@
     <description>长沙市财政评审中心软件规模评估系统 - 后端服务</description>
     
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <flyway.version>8.5.13</flyway.version>
-        <springdoc.version>1.7.0</springdoc.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <checkstyle.version>3.3.1</checkstyle.version>
-        <testcontainers.version>1.19.1</testcontainers.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <flyway.version>10.18.2</flyway.version>
+        <springdoc.version>2.6.0</springdoc.version>
+        <mapstruct.version>1.6.2</mapstruct.version>
+        <checkstyle.version>3.5.0</checkstyle.version>
+        <testcontainers.version>1.20.2</testcontainers.version>
     </properties>
 
     <dependencies>

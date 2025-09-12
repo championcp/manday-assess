@@ -1,6 +1,6 @@
 package gov.changsha.finance.dto.request;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 /**
  * 用户注册请求DTO

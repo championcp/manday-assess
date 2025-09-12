@@ -1,7 +1,7 @@
 package gov.changsha.finance.dto.request;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 用户登录请求DTO
