@@ -2,7 +2,9 @@ package gov.changsha.finance.controller;
 
 import gov.changsha.finance.dto.ApiResponse;
 import gov.changsha.finance.dto.request.LoginRequest;
+import gov.changsha.finance.dto.request.RegisterRequest;
 import gov.changsha.finance.dto.response.JwtAuthenticationResponse;
+import gov.changsha.finance.dto.response.RegisterResponse;
 import gov.changsha.finance.security.jwt.JwtTokenProvider;
 import gov.changsha.finance.security.jwt.UserPrincipal;
 import gov.changsha.finance.service.AuthService;
@@ -52,6 +54,100 @@ public class AuthController {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    /**
+     * 用户注册
+     */
+    @Operation(summary = "用户注册", description = "创建新用户账户，支持用户名、密码、邮箱、姓名、部门等字段验证")
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(
+            @Valid @RequestBody RegisterRequest registerRequest,
+            HttpServletRequest request) {
+        
+        try {
+            String clientIp = getClientIpAddress(request);
+            String userAgent = request.getHeader("User-Agent");
+            
+            logger.info("用户注册尝试 - 用户名: {}, 邮箱: {}, IP: {}", 
+                       registerRequest.getUsername(), registerRequest.getEmail(), clientIp);
+            
+            // 设置客户端信息用于审计
+            registerRequest.setClientInfo(userAgent);
+            
+            // 执行注册
+            RegisterResponse response = authService.registerUser(registerRequest, clientIp);
+            
+            logger.info("用户注册成功 - 用户ID: {}, 用户名: {}, IP: {}", 
+                       response.getUserId(), response.getUsername(), clientIp);
+            
+            return ResponseEntity.ok(ApiResponse.success("注册成功", response));
+            
+        } catch (IllegalArgumentException ex) {
+            logger.warn("用户注册失败 - 数据验证错误: {}, 用户名: {}", 
+                       ex.getMessage(), registerRequest.getUsername());
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error(ex.getMessage()));
+            
+        } catch (Exception ex) {
+            logger.error("用户注册异常 - 用户名: {}", registerRequest.getUsername(), ex);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("注册系统异常，请稍后重试"));
+        }
+    }
+    
+    /**
+     * 检查用户名是否可用
+     */
+    @Operation(summary = "检查用户名可用性", description = "检查指定用户名是否已被注册")
+    @GetMapping("/check-username")
+    public ResponseEntity<ApiResponse<Boolean>> checkUsernameAvailability(@RequestParam String username) {
+        try {
+            boolean available = authService.isUsernameAvailable(username);
+            String message = available ? "用户名可用" : "用户名已被占用";
+            return ResponseEntity.ok(ApiResponse.success(message, available));
+            
+        } catch (Exception ex) {
+            logger.error("检查用户名可用性异常 - 用户名: {}", username, ex);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("检查用户名可用性失败"));
+        }
+    }
+    
+    /**
+     * 检查邮箱是否可用
+     */
+    @Operation(summary = "检查邮箱可用性", description = "检查指定邮箱是否已被注册")
+    @GetMapping("/check-email")
+    public ResponseEntity<ApiResponse<Boolean>> checkEmailAvailability(@RequestParam String email) {
+        try {
+            boolean available = authService.isEmailAvailable(email);
+            String message = available ? "邮箱可用" : "邮箱已被注册";
+            return ResponseEntity.ok(ApiResponse.success(message, available));
+            
+        } catch (Exception ex) {
+            logger.error("检查邮箱可用性异常 - 邮箱: {}", email, ex);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("检查邮箱可用性失败"));
+        }
+    }
+    
+    /**
+     * 检查工号是否可用
+     */
+    @Operation(summary = "检查工号可用性", description = "检查指定工号是否已被注册")
+    @GetMapping("/check-employee-id")
+    public ResponseEntity<ApiResponse<Boolean>> checkEmployeeIdAvailability(@RequestParam String employeeId) {
+        try {
+            boolean available = authService.isEmployeeIdAvailable(employeeId);
+            String message = available ? "工号可用" : "工号已被占用";
+            return ResponseEntity.ok(ApiResponse.success(message, available));
+            
+        } catch (Exception ex) {
+            logger.error("检查工号可用性异常 - 工号: {}", employeeId, ex);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("检查工号可用性失败"));
+        }
+    }
     
     /**
      * 用户登录

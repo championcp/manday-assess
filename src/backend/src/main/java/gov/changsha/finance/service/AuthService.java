@@ -1,5 +1,7 @@
 package gov.changsha.finance.service;
 
+import gov.changsha.finance.dto.request.RegisterRequest;
+import gov.changsha.finance.dto.response.RegisterResponse;
 import gov.changsha.finance.entity.User;
 import gov.changsha.finance.repository.UserRepository;
 import gov.changsha.finance.security.CustomUserDetailsService;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
@@ -38,6 +41,9 @@ public class AuthService {
     
     @Autowired
     private AuditLogService auditLogService; // 将在后续创建
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     /**
      * 更新用户登录信息
@@ -208,6 +214,146 @@ public class AuthService {
             return false;
         } catch (Exception ex) {
             logger.error("检查密码过期状态异常 - 用户ID: {}", userId, ex);
+            return false;
+        }
+    }
+    
+    /**
+     * 用户注册
+     * 创建新用户账户，包含完整的数据验证和安全处理
+     */
+    @Transactional
+    public RegisterResponse registerUser(RegisterRequest registerRequest, String clientIp) {
+        try {
+            logger.info("开始用户注册 - 用户名: {}, 邮箱: {}, IP: {}", 
+                       registerRequest.getUsername(), registerRequest.getEmail(), clientIp);
+            
+            // 1. 验证密码确认
+            if (!registerRequest.isPasswordConfirmed()) {
+                throw new IllegalArgumentException("密码与确认密码不匹配");
+            }
+            
+            // 2. 检查用户名是否已存在
+            if (userRepository.existsByUsername(registerRequest.getUsername())) {
+                throw new IllegalArgumentException("用户名已存在");
+            }
+            
+            // 3. 检查邮箱是否已存在
+            if (userRepository.existsByEmail(registerRequest.getEmail())) {
+                throw new IllegalArgumentException("邮箱已被注册");
+            }
+            
+            // 4. 检查工号是否已存在（如果提供了工号）
+            if (registerRequest.getEmployeeId() != null && 
+                !registerRequest.getEmployeeId().trim().isEmpty() && 
+                userRepository.existsByEmployeeId(registerRequest.getEmployeeId())) {
+                throw new IllegalArgumentException("工号已存在");
+            }
+            
+            // 5. 创建用户对象
+            User newUser = new User();
+            newUser.setUsername(registerRequest.getUsername());
+            newUser.setPasswordHash(passwordEncoder.encode(registerRequest.getPassword()));
+            newUser.setRealName(registerRequest.getRealName());
+            newUser.setEmail(registerRequest.getEmail());
+            newUser.setPhone(registerRequest.getPhone());
+            newUser.setEmployeeId(registerRequest.getEmployeeId());
+            newUser.setDepartment(registerRequest.getDepartment());
+            newUser.setPosition(registerRequest.getPosition());
+            newUser.setAccountStatus(User.AccountStatus.ACTIVE);
+            newUser.setCreatedBy("SYSTEM"); // 自注册由系统创建
+            newUser.setUpdatedBy("SYSTEM");
+            
+            // 6. 设置密码过期时间（90天）
+            newUser.setPasswordExpiresAt(LocalDateTime.now().plusDays(90));
+            
+            // 7. 保存用户
+            User savedUser = userRepository.save(newUser);
+            
+            // 8. 记录注册审计日志
+            try {
+                auditLogService.recordRegistration(savedUser, clientIp, registerRequest.getClientInfo());
+            } catch (Exception auditEx) {
+                logger.warn("记录注册审计日志失败，但不影响业务操作", auditEx);
+            }
+            
+            // 9. 构建响应
+            RegisterResponse response = new RegisterResponse();
+            response.setUserId(savedUser.getId());
+            response.setUsername(savedUser.getUsername());
+            response.setRealName(savedUser.getRealName());
+            response.setEmail(savedUser.getEmail());
+            response.setEmployeeId(savedUser.getEmployeeId());
+            response.setDepartment(savedUser.getDepartment());
+            response.setPosition(savedUser.getPosition());
+            response.setAccountStatus(savedUser.getAccountStatus().toString());
+            response.setRegisteredAt(savedUser.getCreatedAt());
+            response.setRegisteredIp(clientIp);
+            
+            logger.info("用户注册成功 - 用户ID: {}, 用户名: {}, IP: {}", 
+                       savedUser.getId(), savedUser.getUsername(), clientIp);
+            
+            return response;
+            
+        } catch (IllegalArgumentException ex) {
+            logger.warn("用户注册失败 - 数据验证错误: {}, 用户名: {}", ex.getMessage(), registerRequest.getUsername());
+            throw ex;
+        } catch (Exception ex) {
+            logger.error("用户注册异常 - 用户名: {}", registerRequest.getUsername(), ex);
+            throw new RuntimeException("用户注册失败，请稍后重试", ex);
+        }
+    }
+    
+    /**
+     * 验证注册数据的业务规则
+     */
+    private void validateRegistrationData(RegisterRequest registerRequest) {
+        // 用户名不能包含特殊字符（已在DTO注解中验证）
+        // 邮箱格式验证（已在DTO注解中验证）
+        // 密码强度验证（已在DTO注解中验证）
+        
+        // 可在此处添加额外的业务规则验证
+        // 例如：特定部门的限制、用户名黑名单等
+    }
+    
+    /**
+     * 检查用户名是否可用
+     */
+    @Transactional(readOnly = true)
+    public boolean isUsernameAvailable(String username) {
+        try {
+            return !userRepository.existsByUsername(username);
+        } catch (Exception ex) {
+            logger.error("检查用户名可用性异常 - 用户名: {}", username, ex);
+            return false;
+        }
+    }
+    
+    /**
+     * 检查邮箱是否可用
+     */
+    @Transactional(readOnly = true)
+    public boolean isEmailAvailable(String email) {
+        try {
+            return !userRepository.existsByEmail(email);
+        } catch (Exception ex) {
+            logger.error("检查邮箱可用性异常 - 邮箱: {}", email, ex);
+            return false;
+        }
+    }
+    
+    /**
+     * 检查工号是否可用
+     */
+    @Transactional(readOnly = true)
+    public boolean isEmployeeIdAvailable(String employeeId) {
+        try {
+            if (employeeId == null || employeeId.trim().isEmpty()) {
+                return true; // 工号为空时认为可用
+            }
+            return !userRepository.existsByEmployeeId(employeeId);
+        } catch (Exception ex) {
+            logger.error("检查工号可用性异常 - 工号: {}", employeeId, ex);
             return false;
         }
     }

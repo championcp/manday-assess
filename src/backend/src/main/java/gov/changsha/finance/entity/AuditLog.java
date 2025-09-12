@@ -174,6 +174,7 @@ public class AuditLog {
         LOGIN("登录"),
         LOGOUT("登出"),
         LOGIN_FAILED("登录失败"),
+        REGISTER("用户注册"),
         
         // 用户管理
         USER_CREATE("创建用户"),
