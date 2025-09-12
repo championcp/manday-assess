@@ -150,12 +150,10 @@ class Issue9ProjectApiPermissionTest {
     void testAdminCanCreateProject() throws Exception {
         Authentication auth = createAuthentication(adminUser);
         
-        String requestBody = """
-            {
-                "projectName": "测试项目",
-                "description": "Issue #9 权限测试项目"
-            }
-            """;
+        String requestBody = "{" +
+            "\"projectName\": \"测试项目\"," +
+            "\"description\": \"Issue #9 权限测试项目\"" +
+            "}";
 
         mockMvc.perform(post("/api/projects")
                 .with(authentication(auth))
@@ -195,12 +193,10 @@ class Issue9ProjectApiPermissionTest {
                 .andExpected(jsonPath("$.success").value(true));
 
         // 测试项目创建
-        String requestBody = """
-            {
-                "projectName": "项目经理测试项目",
-                "description": "项目经理权限测试"
-            }
-            """;
+        String requestBody = "{" +
+            "\"projectName\": \"项目经理测试项目\"," +
+            "\"description\": \"项目经理权限测试\"" +
+            "}";
 
         mockMvc.perform(post("/api/projects")
                 .with(authentication(auth))
@@ -224,12 +220,10 @@ class Issue9ProjectApiPermissionTest {
                 .andExpected(status().isOk());
 
         // 不应该能创建项目
-        String requestBody = """
-            {
-                "projectName": "评估人员测试项目",
-                "description": "应该被拒绝"
-            }
-            """;
+        String requestBody = "{" +
+            "\"projectName\": \"评估人员测试项目\"," +
+            "\"description\": \"应该被拒绝\"" +
+            "}";
 
         mockMvc.perform(post("/api/projects")
                 .with(authentication(auth))
@@ -252,12 +246,10 @@ class Issue9ProjectApiPermissionTest {
                 .andExpected(status().isForbidden());
 
         // 不应该能创建项目
-        String requestBody = """
-            {
-                "projectName": "普通用户测试项目",
-                "description": "应该被拒绝"
-            }
-            """;
+        String requestBody = "{" +
+            "\"projectName\": \"普通用户测试项目\"," +
+            "\"description\": \"应该被拒绝\"" +
+            "}";
 
         mockMvc.perform(post("/api/projects")
                 .with(authentication(auth))
