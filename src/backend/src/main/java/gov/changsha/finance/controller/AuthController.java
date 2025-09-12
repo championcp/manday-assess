@@ -86,7 +86,7 @@ public class AuthController {
             logger.warn("用户注册失败 - 数据验证错误: {}, 用户名: {}", 
                        ex.getMessage(), registerRequest.getUsername());
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error(ex.getMessage()));
+                .body(ApiResponse.error(400, ex.getMessage()));
             
         } catch (Exception ex) {
             logger.error("用户注册异常 - 用户名: {}", registerRequest.getUsername(), ex);
