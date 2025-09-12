@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureTestMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,8 +41,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @since 2025-09-12
  */
 @SpringBootTest
-@AutoConfigureTestMvc
-@ActiveProfiles("test")
 @DisplayName("Issue #10: NESMA计算功能权限修复测试")
 class Issue10NesmaPermissionTest {
 
