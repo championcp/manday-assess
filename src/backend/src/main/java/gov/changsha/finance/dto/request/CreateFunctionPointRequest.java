@@ -1,6 +1,6 @@
 package gov.changsha.finance.dto.request;
 
-import javax.validation.constraints.*;
+import jakarta.validation.constraints.*;
 
 import java.io.Serializable;
 

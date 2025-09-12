@@ -1,6 +1,6 @@
 package gov.changsha.finance.entity;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 

@@ -113,29 +113,27 @@ public class SecurityConfig {
     @Profile("dev")
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors().configurationSource(corsConfigurationSource())
-            .and()
-            .csrf().disable()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            .and()
-            .authorizeRequests(authz -> authz
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(authz -> authz
                 // 公共端点 - 不需要认证
-                .antMatchers("/api/auth/**").permitAll()
-                .antMatchers("/api/public/**").permitAll()
-                .antMatchers("/actuator/health", "/actuator/info").permitAll()
-                .antMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .antMatchers("/favicon.ico", "/error").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/favicon.ico", "/error").permitAll()
                 
                 // 开发环境下API允许访问（但仍需要有效JWT）
-                .antMatchers("/api/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/management/**").hasAnyRole("ADMIN", "PROJECT_MANAGER")
-                .antMatchers("/api/projects/**").hasAnyRole("PROJECT_MANAGER", "ADMIN", "ASSESSOR")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/management/**").hasAnyRole("ADMIN", "PROJECT_MANAGER")
+                .requestMatchers("/api/projects/**").hasAnyRole("PROJECT_MANAGER", "ADMIN", "ASSESSOR")
                 
                 // NESMA计算相关 - 需要评审员权限
-                .antMatchers("/api/nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
-                .antMatchers("/api/simple-nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
+                .requestMatchers("/api/nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
+                .requestMatchers("/api/simple-nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
                 
-                .antMatchers("/api/**").authenticated()
+                .requestMatchers("/api/**").authenticated()
                 
                 // 其他请求需要认证
                 .anyRequest().authenticated()
@@ -154,11 +152,9 @@ public class SecurityConfig {
     @Profile({"test", "prod"})
     public SecurityFilterChain prodSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors().configurationSource(corsConfigurationSource())
-            .and()
-            .csrf().disable()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            .and()
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
                 .frameOptions().deny()
                 .contentTypeOptions().and()
@@ -166,31 +162,30 @@ public class SecurityConfig {
                     .maxAgeInSeconds(31536000)
                     .includeSubDomains(true)
                 )
-                .and()
             )
-            .authorizeRequests(authz -> authz
+            .authorizeHttpRequests(authz -> authz
                 // 公共端点 - 不需要认证
-                .antMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
-                .antMatchers("/actuator/health").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/refresh").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
                 
                 // 管理端点 - 需要管理员权限
-                .antMatchers("/api/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/management/**").hasAnyRole("ADMIN", "PROJECT_MANAGER")
-                .antMatchers("/api/audit/**").hasRole("AUDITOR")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/management/**").hasAnyRole("ADMIN", "PROJECT_MANAGER")
+                .requestMatchers("/api/audit/**").hasRole("AUDITOR")
                 
                 // NESMA计算相关 - 需要评审员权限
-                .antMatchers("/api/nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
-                .antMatchers("/api/simple-nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
-                .antMatchers("/api/projects/**").hasAnyRole("PROJECT_MANAGER", "ADMIN")
+                .requestMatchers("/api/nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
+                .requestMatchers("/api/simple-nesma/**").hasAnyRole("ASSESSOR", "PROJECT_MANAGER", "ADMIN")
+                .requestMatchers("/api/projects/**").hasAnyRole("PROJECT_MANAGER", "ADMIN")
                 
                 // 用户相关 - 认证用户可访问
-                .antMatchers("/api/user/**").authenticated()
+                .requestMatchers("/api/user/**").authenticated()
                 
                 // API文档需要认证（生产环境）
-                .antMatchers("/swagger-ui/**", "/v3/api-docs/**").hasRole("ADMIN")
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").hasRole("ADMIN")
                 
                 // 其他API需要认证
-                .antMatchers("/api/**").authenticated()
+                .requestMatchers("/api/**").authenticated()
                 
                 // 拒绝所有其他请求
                 .anyRequest().denyAll()
