@@ -92,7 +92,8 @@ public class ProjectController {
             
         } catch (Exception e) {
             logger.error("获取项目列表失败", e);
-            return ApiResponse.error("获取项目列表失败: " + e.getMessage());
+            // 直接抛出让全局异常处理器处理
+            throw e;
         }
     }
 
@@ -119,7 +120,8 @@ public class ProjectController {
             
         } catch (Exception e) {
             logger.error("获取项目详情失败, id=" + id, e);
-            return ApiResponse.error("获取项目详情失败: " + e.getMessage());
+            // 直接抛出让全局异常处理器处理
+            throw e;
         }
     }
 
@@ -166,7 +168,8 @@ public class ProjectController {
             
         } catch (Exception e) {
             logger.error("创建项目失败", e);
-            return ApiResponse.error("创建项目失败: " + e.getMessage());
+            // 直接抛出让全局异常处理器处理
+            throw e;
         }
     }
 

@@ -63,6 +63,13 @@ public class ApiResponse<T> {
     }
 
     /**
+     * 创建失败响应（带数据）
+     */
+    public static <T> ApiResponse<T> error(int code, String message, T data) {
+        return new ApiResponse<>(code, message, data);
+    }
+
+    /**
      * 创建失败响应
      */
     public static <T> ApiResponse<T> error(int code, String message) {
