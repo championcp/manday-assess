@@ -139,7 +139,7 @@ class Issue9ProjectApiPermissionTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpected(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("获取项目列表成功"));
     }
 
@@ -158,9 +158,9 @@ class Issue9ProjectApiPermissionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
                 .andDo(print())
-                .andExpected(status().isOk())
-                .andExpected(jsonPath("$.success").value(true))
-                .andExpected(jsonPath("$.message").value("创建项目成功"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("创建项目成功"));
     }
 
     @Test
@@ -173,7 +173,7 @@ class Issue9ProjectApiPermissionTest {
                 .with(authentication(auth))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpected(status().isOk());
+                .andExpect(status().isOk());
         // 注意：这里可能返回404如果项目不存在，但不应该返回403权限错误
     }
 
@@ -187,8 +187,8 @@ class Issue9ProjectApiPermissionTest {
                 .with(authentication(auth))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpected(status().isOk())
-                .andExpected(jsonPath("$.success").value(true));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
 
         // 测试项目创建
         String requestBody = "{" +
@@ -201,8 +201,8 @@ class Issue9ProjectApiPermissionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
                 .andDo(print())
-                .andExpected(status().isOk())
-                .andExpected(jsonPath("$.success").value(true));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
@@ -215,7 +215,7 @@ class Issue9ProjectApiPermissionTest {
                 .with(authentication(auth))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpected(status().isOk());
+                .andExpect(status().isOk());
 
         // 不应该能创建项目
         String requestBody = "{" +
@@ -228,7 +228,7 @@ class Issue9ProjectApiPermissionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
                 .andDo(print())
-                .andExpected(status().isForbidden());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -241,7 +241,7 @@ class Issue9ProjectApiPermissionTest {
                 .with(authentication(auth))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpected(status().isForbidden());
+                .andExpect(status().isForbidden());
 
         // 不应该能创建项目
         String requestBody = "{" +
@@ -254,7 +254,7 @@ class Issue9ProjectApiPermissionTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
                 .andDo(print())
-                .andExpected(status().isForbidden());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -264,13 +264,13 @@ class Issue9ProjectApiPermissionTest {
         mockMvc.perform(get("/api/projects")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpected(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
 
         mockMvc.perform(post("/api/projects")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"projectName\":\"test\"}"))
                 .andDo(print())
-                .andExpected(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -280,7 +280,7 @@ class Issue9ProjectApiPermissionTest {
         mockMvc.perform(get("/api/projects")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpected(status().isOk());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -290,6 +290,6 @@ class Issue9ProjectApiPermissionTest {
         mockMvc.perform(get("/api/projects")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpected(status().isForbidden());
+                .andExpect(status().isForbidden());
     }
 }
