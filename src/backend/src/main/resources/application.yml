@@ -154,6 +154,13 @@ spring:
 # 服务器生产配置
 server:
   port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+    whitelabel:
+      enabled: false
   
 # 日志生产配置
 logging:

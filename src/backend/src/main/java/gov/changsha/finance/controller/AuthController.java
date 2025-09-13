@@ -85,13 +85,13 @@ public class AuthController {
         } catch (IllegalArgumentException ex) {
             logger.warn("用户注册失败 - 数据验证错误: {}, 用户名: {}", 
                        ex.getMessage(), registerRequest.getUsername());
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error(ex.getMessage()));
+            // 业务逻辑异常，直接抛出让全局异常处理器处理
+            throw ex;
             
         } catch (Exception ex) {
             logger.error("用户注册异常 - 用户名: {}", registerRequest.getUsername(), ex);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("注册系统异常，请稍后重试"));
+            // 系统异常，直接抛出让全局异常处理器处理
+            throw ex;
         }
     }
     
@@ -108,8 +108,8 @@ public class AuthController {
             
         } catch (Exception ex) {
             logger.error("检查用户名可用性异常 - 用户名: {}", username, ex);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("检查用户名可用性失败"));
+            // 直接抛出让全局异常处理器处理
+            throw ex;
         }
     }
     
@@ -126,8 +126,8 @@ public class AuthController {
             
         } catch (Exception ex) {
             logger.error("检查邮箱可用性异常 - 邮箱: {}", email, ex);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("检查邮箱可用性失败"));
+            // 直接抛出让全局异常处理器处理
+            throw ex;
         }
     }
     
@@ -144,8 +144,8 @@ public class AuthController {
             
         } catch (Exception ex) {
             logger.error("检查工号可用性异常 - 工号: {}", employeeId, ex);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("检查工号可用性失败"));
+            // 直接抛出让全局异常处理器处理
+            throw ex;
         }
     }
     
@@ -210,23 +210,23 @@ public class AuthController {
         } catch (BadCredentialsException ex) {
             logger.warn("用户登录失败 - 用户名或密码错误: {}", loginRequest.getUsername());
             authService.handleFailedLogin(loginRequest.getUsername(), getClientIpAddress(request));
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("用户名或密码错误"));
+            // 认证异常，直接抛出让全局异常处理器处理
+            throw ex;
             
         } catch (LockedException ex) {
             logger.warn("用户登录失败 - 账户被锁定: {}", loginRequest.getUsername());
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("账户已被锁定，请联系管理员"));
+            // 认证异常，直接抛出让全局异常处理器处理
+            throw ex;
             
         } catch (DisabledException ex) {
             logger.warn("用户登录失败 - 账户被禁用: {}", loginRequest.getUsername());
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("账户已被禁用，请联系管理员"));
+            // 认证异常，直接抛出让全局异常处理器处理
+            throw ex;
             
         } catch (Exception ex) {
             logger.error("用户登录异常 - 用户: {}", loginRequest.getUsername(), ex);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("登录系统异常，请稍后重试"));
+            // 系统异常，直接抛出让全局异常处理器处理
+            throw ex;
         }
     }
     
@@ -273,8 +273,8 @@ public class AuthController {
             
         } catch (Exception ex) {
             logger.error("令牌刷新失败", ex);
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.error("令牌刷新失败"));
+            // 直接抛出让全局异常处理器处理
+            throw ex;
         }
     }
     
@@ -303,8 +303,8 @@ public class AuthController {
             
         } catch (Exception ex) {
             logger.error("用户登出异常", ex);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("登出异常"));
+            // 直接抛出让全局异常处理器处理
+            throw ex;
         }
     }
     
@@ -337,8 +337,8 @@ public class AuthController {
             
         } catch (Exception ex) {
             logger.error("获取当前用户信息异常", ex);
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("获取用户信息异常"));
+            // 直接抛出让全局异常处理器处理
+            throw ex;
         }
     }
     
@@ -354,6 +354,7 @@ public class AuthController {
             
         } catch (Exception ex) {
             logger.error("令牌验证异常", ex);
+            // 令牌验证异常不应该暴露详细信息，返回false即可
             return ResponseEntity.ok(ApiResponse.success("令牌验证完成", false));
         }
     }
