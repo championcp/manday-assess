@@ -61,12 +61,12 @@ echo "🔧 启动后端服务..."
 echo "   后端将在新终端窗口中启动"
 sleep 2
 
-# 在新终端窗口中启动后端
+# 在新终端窗口中启动后端 (使用端口检测脚本)
 if command -v osascript > /dev/null 2>&1; then
-    # macOS
-    osascript -e "tell application \"Terminal\" to do script \"cd '$(pwd)' && cd src/backend && echo '🚀 启动Spring Boot后端服务...' && echo '📍 访问地址: http://localhost:8080' && echo '💡 使用 Ctrl+C 停止服务' && echo '' && ./mvnw spring-boot:run\""
+    # macOS - 使用新的多实例启动脚本
+    osascript -e "tell application \"Terminal\" to do script \"cd '$(pwd)' && echo '🚀 启动Spring Boot后端服务 (端口自动检测)...' && echo '💡 使用 Ctrl+C 停止服务' && echo '' && ./scripts/start-backend-dev.sh auto dev\""
 else
-    echo "请在新终端中运行: cd src/backend && ./mvnw spring-boot:run"
+    echo "请在新终端中运行: ./scripts/start-backend-dev.sh auto dev"
 fi
 
 # 等待后端启动
