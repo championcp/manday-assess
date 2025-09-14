@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.changsha.finance.dto.request.LoginRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureTestMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @since 2025-09-14
  */
 @SpringBootTest
-@AutoConfigureTestMvc
+@AutoConfigureMockMvc
 @ActiveProfiles("dev")
 public class LoginPerformanceTest {
     
