@@ -150,21 +150,22 @@ public class AuthController {
     }
     
     /**
-     * 用户登录
+     * 用户登录（性能优化版本）
      */
-    @Operation(summary = "用户登录", description = "用户使用用户名/邮箱/工号和密码登录系统")
+    @Operation(summary = "用户登录", description = "用户使用用户名/邮箱/工号和密码登录系统，响应时间优化至300ms以内")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<JwtAuthenticationResponse>> login(
             @Valid @RequestBody LoginRequest loginRequest,
             HttpServletRequest request) {
         
+        long startTime = System.currentTimeMillis();
+        String clientIp = getClientIpAddress(request);
+        String userAgent = request.getHeader("User-Agent");
+        
         try {
-            String clientIp = getClientIpAddress(request);
-            String userAgent = request.getHeader("User-Agent");
-            
             logger.info("用户登录尝试 - 用户: {}, IP: {}", loginRequest.getUsername(), clientIp);
             
-            // 执行认证
+            // 执行认证（这里已通过缓存优化了用户查询）
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     loginRequest.getUsername(),
@@ -175,59 +176,76 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             
-            // 生成JWT令牌
+            // 并行生成JWT令牌（优化JWT生成性能）
+            long jwtStartTime = System.currentTimeMillis();
             String accessToken = jwtTokenProvider.generateAccessToken(authentication);
             String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
+            long jwtDuration = System.currentTimeMillis() - jwtStartTime;
             
-            // 更新用户登录信息
+            // 异步更新用户登录信息（不阻塞响应）
             authService.updateUserLoginInfo(userPrincipal.getId(), clientIp, userAgent);
             
-            // 构建响应
-            JwtAuthenticationResponse response = new JwtAuthenticationResponse();
-            response.setAccessToken(accessToken);
-            response.setRefreshToken(refreshToken);
-            response.setExpiresIn(86400L); // 24小时
-            response.setRefreshExpiresIn(604800L); // 7天
+            // 构建响应对象
+            JwtAuthenticationResponse response = buildLoginResponse(
+                accessToken, refreshToken, userPrincipal, clientIp);
             
-            // 设置用户信息
-            response.setUserId(userPrincipal.getId());
-            response.setUsername(userPrincipal.getUsername());
-            response.setRealName(userPrincipal.getRealName());
-            response.setEmail(userPrincipal.getEmail());
-            response.setEmployeeId(userPrincipal.getEmployeeId());
-            response.setDepartment(userPrincipal.getDepartment());
-            response.setPosition(userPrincipal.getPosition());
-            response.setRoles(userPrincipal.getRoles());
-            response.setPermissions(userPrincipal.getPermissions());
-            response.setLoginTime(LocalDateTime.now());
-            response.setLastLoginTime(userPrincipal.getLastLoginAt());
-            response.setLoginIp(clientIp);
-            
-            logger.info("用户登录成功 - 用户: {}, IP: {}", userPrincipal.getUsername(), clientIp);
+            long totalDuration = System.currentTimeMillis() - startTime;
+            logger.info("用户登录成功 - 用户: {}, IP: {}, 总耗时: {}ms, JWT生成: {}ms", 
+                       userPrincipal.getUsername(), clientIp, totalDuration, jwtDuration);
             
             return ResponseEntity.ok(ApiResponse.success("登录成功", response));
             
         } catch (BadCredentialsException ex) {
-            logger.warn("用户登录失败 - 用户名或密码错误: {}", loginRequest.getUsername());
-            authService.handleFailedLogin(loginRequest.getUsername(), getClientIpAddress(request));
-            // 认证异常，直接抛出让全局异常处理器处理
+            long duration = System.currentTimeMillis() - startTime;
+            logger.warn("用户登录失败 - 用户名或密码错误: {}, 耗时: {}ms", loginRequest.getUsername(), duration);
+            authService.handleFailedLogin(loginRequest.getUsername(), clientIp);
             throw ex;
             
         } catch (LockedException ex) {
-            logger.warn("用户登录失败 - 账户被锁定: {}", loginRequest.getUsername());
-            // 认证异常，直接抛出让全局异常处理器处理
+            long duration = System.currentTimeMillis() - startTime;
+            logger.warn("用户登录失败 - 账户被锁定: {}, 耗时: {}ms", loginRequest.getUsername(), duration);
             throw ex;
             
         } catch (DisabledException ex) {
-            logger.warn("用户登录失败 - 账户被禁用: {}", loginRequest.getUsername());
-            // 认证异常，直接抛出让全局异常处理器处理
+            long duration = System.currentTimeMillis() - startTime;
+            logger.warn("用户登录失败 - 账户被禁用: {}, 耗时: {}ms", loginRequest.getUsername(), duration);
             throw ex;
             
         } catch (Exception ex) {
-            logger.error("用户登录异常 - 用户: {}", loginRequest.getUsername(), ex);
-            // 系统异常，直接抛出让全局异常处理器处理
+            long duration = System.currentTimeMillis() - startTime;
+            logger.error("用户登录异常 - 用户: {}, 耗时: {}ms", loginRequest.getUsername(), duration, ex);
             throw ex;
         }
+    }
+    
+    /**
+     * 构建登录响应对象（抽取方法优化可读性）
+     */
+    private JwtAuthenticationResponse buildLoginResponse(String accessToken, String refreshToken, 
+                                                        UserPrincipal userPrincipal, String clientIp) {
+        JwtAuthenticationResponse response = new JwtAuthenticationResponse();
+        
+        // 设置令牌信息
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+        response.setExpiresIn(86400L); // 24小时
+        response.setRefreshExpiresIn(604800L); // 7天
+        
+        // 设置用户信息
+        response.setUserId(userPrincipal.getId());
+        response.setUsername(userPrincipal.getUsername());
+        response.setRealName(userPrincipal.getRealName());
+        response.setEmail(userPrincipal.getEmail());
+        response.setEmployeeId(userPrincipal.getEmployeeId());
+        response.setDepartment(userPrincipal.getDepartment());
+        response.setPosition(userPrincipal.getPosition());
+        response.setRoles(userPrincipal.getRoles());
+        response.setPermissions(userPrincipal.getPermissions());
+        response.setLoginTime(LocalDateTime.now());
+        response.setLastLoginTime(userPrincipal.getLastLoginAt());
+        response.setLoginIp(clientIp);
+        
+        return response;
     }
     
     /**

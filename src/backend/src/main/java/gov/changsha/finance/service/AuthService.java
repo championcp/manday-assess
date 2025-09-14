@@ -15,16 +15,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.scheduling.annotation.Async;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
  * 认证服务类
- * 处理用户认证相关业务逻辑
+ * 处理用户认证相关业务逻辑，增加性能优化和缓存机制
  * 
  * @author 开发团队
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2025-09-09
  */
 @Service
@@ -45,10 +46,14 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
+    @Autowired
+    private LoginCacheService loginCacheService;
+    
     /**
-     * 更新用户登录信息
+     * 更新用户登录信息（性能优化版本）
      */
     public void updateUserLoginInfo(Long userId, String loginIp, String userAgent) {
+        long startTime = System.currentTimeMillis();
         try {
             Optional<User> userOpt = userRepository.findById(userId);
             if (userOpt.isPresent()) {
@@ -57,42 +62,76 @@ public class AuthService {
                 user.resetFailedLoginAttempts(); // 登录成功后重置失败次数
                 userRepository.save(user);
                 
-                // 记录登录审计日志（忽略异常以防止事务回滚）
-                try {
-                    auditLogService.recordLogin(user, loginIp, userAgent);
-                } catch (Exception auditEx) {
-                    logger.warn("记录审计日志失败，但不影响业务操作", auditEx);
-                }
+                // 清除用户缓存，确保下次获取最新信息
+                userDetailsService.clearUserCache(user.getId(), user.getUsername());
                 
-                logger.debug("更新用户登录信息成功 - 用户ID: {}, IP: {}", userId, loginIp);
+                // 清除登录失败计数缓存
+                loginCacheService.clearLoginFailureCount(user.getUsername(), loginIp);
+                
+                // 异步记录登录审计日志（不影响登录响应时间）
+                recordLoginAuditAsync(user, loginIp, userAgent);
+                
+                long duration = System.currentTimeMillis() - startTime;
+                logger.debug("更新用户登录信息成功 - 用户ID: {}, IP: {}, 耗时: {}ms", userId, loginIp, duration);
             }
         } catch (Exception ex) {
-            logger.error("更新用户登录信息失败 - 用户ID: {}", userId, ex);
+            logger.error("更新用户登录信息失败 - 用户ID: {}, 耗时: {}ms", userId, System.currentTimeMillis() - startTime, ex);
         }
     }
     
     /**
-     * 处理登录失败
+     * 异步记录登录审计日志
+     */
+    @Async
+    void recordLoginAuditAsync(User user, String loginIp, String userAgent) {
+        try {
+            auditLogService.recordLogin(user, loginIp, userAgent);
+            logger.debug("异步记录登录审计日志成功 - 用户: {}", user.getUsername());
+        } catch (Exception auditEx) {
+            logger.warn("异步记录登录审计日志失败 - 用户: {}, 错误: {}", user.getUsername(), auditEx.getMessage());
+        }
+    }
+    
+    /**
+     * 处理登录失败（性能优化版本，加入缓存防暴力破解）
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleFailedLogin(String username, String loginIp) {
+        long startTime = System.currentTimeMillis();
         try {
+            // 先更新缓存中的失败计数
+            loginCacheService.cacheLoginFailureCount(username, loginIp);
+            int failureCount = loginCacheService.getLoginFailureCount(username, loginIp);
+            
+            // 如果失败次数超过阈值，记录警告但继续处理数据库更新
+            if (failureCount >= 5) {
+                logger.warn("检测到可能的暴力破解攻击 - 用户: {}, IP: {}, 失败次数: {}", username, loginIp, failureCount);
+            }
+            
+            // 更新数据库中的用户失败计数
             Optional<User> userOpt = userRepository.findByUsernameOrEmailOrEmployeeId(username, username, username);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 user.incrementFailedLoginAttempts();
                 userRepository.save(user);
                 
-                logger.warn("用户登录失败 - 用户: {}, 失败次数: {}, IP: {}", 
-                          username, user.getFailedLoginAttempts(), loginIp);
+                // 清除用户缓存，确保下次获取最新状态
+                userDetailsService.clearUserCache(user.getId(), user.getUsername());
+                
+                logger.warn("用户登录失败 - 用户: {}, 数据库失败次数: {}, 缓存失败次数: {}, IP: {}", 
+                          username, user.getFailedLoginAttempts(), failureCount, loginIp);
                 
                 // 如果达到锁定阈值，发送警告
                 if (user.getFailedLoginAttempts() >= 5) {
                     logger.warn("用户账户被锁定 - 用户: {}, IP: {}", username, loginIp);
                 }
             }
+            
+            long duration = System.currentTimeMillis() - startTime;
+            logger.debug("处理登录失败完成 - 用户: {}, 耗时: {}ms", username, duration);
+            
         } catch (Exception ex) {
-            logger.error("处理登录失败异常 - 用户: {}", username, ex);
+            logger.error("处理登录失败异常 - 用户: {}, 耗时: {}ms", username, System.currentTimeMillis() - startTime, ex);
         }
     }
     
