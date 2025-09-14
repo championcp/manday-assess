@@ -94,23 +94,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 构建错误响应
+     * 构建标准化错误响应（使用新的ApiResponse格式）
      */
     private <T> ResponseEntity<ApiResponse<T>> buildErrorResponse(
             HttpStatus status, String userMessage, String errorId, Exception ex, HttpServletRequest request) {
         
         logError(errorId, ex, request);
         
+        String errorType = ex.getClass().getSimpleName();
+        String requestPath = request.getRequestURI();
+        
         if (isProductionEnvironment()) {
             // 生产环境：返回用户友好消息，隐藏技术细节
-            String safeMessage = userMessage + " [错误ID: " + errorId + "]";
             return ResponseEntity.status(status)
-                .body(ApiResponse.error(status.value(), safeMessage));
+                .body(ApiResponse.error(status.value(), userMessage, errorId, errorType, null, requestPath));
         } else {
             // 开发环境：返回详细错误信息，便于调试
-            String devMessage = userMessage + " | 详细错误: " + ex.getMessage() + " [错误ID: " + errorId + "]";
+            String detailsMessage = "详细错误: " + ex.getMessage();
             return ResponseEntity.status(status)
-                .body(ApiResponse.error(status.value(), devMessage));
+                .body(ApiResponse.error(status.value(), userMessage, errorId, errorType, detailsMessage, requestPath));
         }
     }
 
@@ -165,12 +167,23 @@ public class GlobalExceptionHandler {
 
         logError(errorId, ex, request);
 
+        String errorType = ex.getClass().getSimpleName();
+        String requestPath = request.getRequestURI();
+        
         if (isProductionEnvironment()) {
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error(400, "数据验证失败，请检查输入信息 [错误ID: " + errorId + "]", errors));
+                .body(ApiResponse.error(400, "数据验证失败，请检查输入信息", errors)
+                      .withErrorId(errorId)
+                      .withErrorType(errorType)
+                      .withPath(requestPath));
         } else {
+            String detailsMessage = "详细错误: " + ex.getMessage();
             return ResponseEntity.badRequest()
-                .body(ApiResponse.error(400, "数据验证失败 [错误ID: " + errorId + "]", errors));
+                .body(ApiResponse.error(400, "数据验证失败", errors)
+                      .withErrorId(errorId)
+                      .withErrorType(errorType)
+                      .withDetails(detailsMessage)
+                      .withPath(requestPath));
         }
     }
 
